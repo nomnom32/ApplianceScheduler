@@ -144,16 +144,4 @@ for a=1:n
 solution(a,:)=sol_per_run(fittest_index,(a-1)*t+1:a*t);
 end
 end
-solution
-total_watt = solution.*app_TW;
-kwH = sum(total_watt,1);
-peak = max(kwH)
-kwH2 = sum(kwH)
-tot = 0;
-for i=1:24
-    tot = tot + price(1,i)*kwH(1,i);
-end
-tot
-appsched = solution;
-appwatt = app_TW
 toc
