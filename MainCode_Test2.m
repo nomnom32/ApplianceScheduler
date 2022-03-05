@@ -28,6 +28,15 @@ for i=1:row_len
     end
 end
 
+%Solar Panel Operation %Assume constant for all households
+PV = zeros(24,1);
+for a=1:24
+    if ((a>=10)&&(a<=14))
+        PV(a,1) = 320;
+    end
+end
+PV=PV*solar_own;
+
 % counts number of usage per appliance
 app_usage=zeros(n,1);
 for a = 1:LA(n,1)
@@ -74,7 +83,7 @@ c2=9; %will be change in sensitivity analysis
 v_max=6; %will be change in sensitivity analysis
 validctr=0; %valid schedule counter
 max_iteration=500; %iteration per simulation
-simulations=5;
+simulations=1;
 
 checkd=zeros(1,simulations); %number of appliances with right duration in every simulation
 checki=zeros(1,simulations); %number of appliances with right interruption in every simulation
@@ -91,6 +100,8 @@ for run=1:simulations
     pbest=ones(N,dim); % personal best same size with sig
     gbest=ones(1,dim); % global best, only 1 solution
     pbest_fitness=ones(N,1); %fitness per particle
+    batt_op = zeros(1,t); %battery operation
+    ev_op = zeros(1,t); %ev operation
 
     %Initial position and velocity
     sched=round(rand(N,dim)); %initial 1 and 0
@@ -102,14 +113,28 @@ for run=1:simulations
         itectr=itectr+1;
         w=1; %inertia weight
         
+
+
+
         %Evaluation of Fitness
         for a=1:N
             for b=1:n
                 solution(b,:)=sched(a,(b-1)*t+1:b*t); %solution = type of appliance * 24 hours
             end
+            
+            %Battery and EV Operation
+            if (batt_own==1)
+                batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy); %will update
+            end
+            if (ev_own==1)
+                ev_op = EVCode(solution,app_TW, peak_threshold,ev_int_ch); %will update
+            end
+
             %Fitness Function: To be evaluated later.
             %Basically, it processes all
-            fitness(a,itectr)=objFunc(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu);
+%             fitness(a,itectr)=objFunc(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu);
+            %With Battery and EV fitness funcion
+             fitness(a,itectr)=objFunc1(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu, ev_op, batt_op, PV);
         end
         
         %Updating Pbest of Each Particle
@@ -180,7 +205,8 @@ for run=1:simulations
         solution(a,:)=sol_per_run(fittest_index,(a-1)*t+1:a*t);
     end 
 end
-BatteryCode(solution,PV) %will update
-EVCode(solution,peak_threshold) %will update
-%validity check with battery and ev code %will update
+solution
+batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy)
+ev_op = EVCode(solution,app_TW, peak_threshold,ev_int_ch)
+PV
 toc

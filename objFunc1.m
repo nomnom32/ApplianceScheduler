@@ -1,16 +1,10 @@
-function OF = objFunc(n, t, sched, price, usage, tw, duration, tA, tB, budget, peak, mu)
+function OF = objFunc(n, t, sched, price, usage, tw, duration, tA, tB, budget, peak, mu, ev_op, batt_op, PV)
 
-PV = zeros(1,24);
-for a=1:24
-    if ((a>=10)&&(a<=14))
-        PV(1,a) = 320;
-    end
-end
 
 % n = number of appliances
 % m = number of photovoltaic cells
 % t = number of hours per day
-% mu = maximum appliance usage
+% mu = maximum appliance usagepr
 % sched = n x t matrix
 % price = 1 x t matrix
 % usage,tw = n x 1 matrix (per appliance)
@@ -46,6 +40,10 @@ for a=1:n
     end
 end
 
+batt_charge_rate = diff([batt_op(1,1) batt_op]); %positive if charging, %negative if charging
+ev_charge_rate = diff([ev_op(1,1) ev_op]); %positive if chaging, 0 or positive lang
+app_hour_energy = zeros(1,24);
+
 %% Total Effective Consumption vs Peakthreshold by utility (Watts)
 cons = 0; %consume
 over_peak = 0;
@@ -54,7 +52,7 @@ for b=1:t % do for 24 hrs
     for a=1:n % do for all n appliances
         cons = cons + (sched(a,b) * tw(a)); 
     end
-    temp = (cons - PV(b)- peak); %overpeak when (cons-PV)<peak
+    temp = (cons + ev_charge_rate(b) - batt_charge_rate(b) - PV(b)- peak); %overpeak when (cons-PV)<peak
     if temp>0 
         over_peak = over_peak + temp;
     end
@@ -65,16 +63,26 @@ OP = over_peak*P_over*Mop; %-/1000
 %% Total Effective Cost (EC) (Peso)
 cons_price=0; %consumed price
 prod_price=0; %produced price
-for b=1:t
+
+
+for b=1:t %Appliance Hourly Energy Usage
     for a=1:n
-        cons_price = cons_price + (sched(a,b) * tw(a) * price(1,b));
+        app_hour_energy(b) = app_hour_energy(b) + (sched(a,b) * tw(a));
     end
 end
 
-for b=1:t
-    prod_price= prod_price + (PV(b) * price(1,b));
+for b=1:t %Appliance and EV Price Consumption
+    cons_price = cons_price + (app_hour_energy(b)+ev_charge_rate(b))*price(1,b); %ev operation addition
 end
 
+for b=1:t %For Battery and PV Contribution
+    if PV(b)>=app_hour_energy(b)
+        prod_price= prod_price + (app_hour_energy(b) * price(1,b));
+    end
+    if batt_charge_rate<0
+        prod_price = prod_price + (-batt_charge_rate(b)*price(1,b));
+    end
+end
 temp = cons_price - prod_price;
 if temp>0
     EC = temp*Mc;
