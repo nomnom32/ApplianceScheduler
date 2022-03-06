@@ -15,6 +15,7 @@ objFunc1 - produce fitness of an schedule
 EVCode.m:
 - outputs the EV charge state, 1x24 matrix
 - electric vehicles only charge when total hourly wattage < peak
+
 BatteryCode.m:
 - outputs the Battery charge state, 1x24 matrix
 - battery charges when PV>total hourly wattage
