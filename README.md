@@ -12,10 +12,12 @@ MainCode_Test2.m runs the import of data input (UserInput_Test2.m) with changed 
 objFunc1 - produce fitness of an schedule
 1. EV and Battery Incorporation updated - up for deeper analysis. Testing case. (Flexibility Analysis)
 
-EVCode.m - outputs the EV charge state, 1x24 matrix
-         - electric vehicles only charge when total hourly wattage < peak
-BatteryCode.m - outputs the Battery charge state, 1x24 matrix
-         - battery charges when PV>total hourly wattage
-         - discharge when PV<total hourly wattage 
+EVCode.m:
+- outputs the EV charge state, 1x24 matrix
+- electric vehicles only charge when total hourly wattage < peak
+BatteryCode.m:
+- outputs the Battery charge state, 1x24 matrix
+- battery charges when PV>total hourly wattage
+- discharge when PV<total hourly wattage 
 
 %% CITY GENERATION
