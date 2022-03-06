@@ -3,7 +3,7 @@ BPSO-based appliance scheduler
 
 %% SCHEDULER
 
-MainCode_Test2.m runs the import of data input (UserInput_Test2.m) with changed main code and objective function (objFunc.m) to accomodate EVCode Function (EVCode.m) and BatteryCodeFunction (BatteryCode.m)
+MainCode_Test2.m runs the import of data input (UserInput_Test2.m) with modified main code and objective function (objFunc.m) to accomodate EVCode Function (EVCode.m) and BatteryCodeFunction (BatteryCode.m)
 1. Does not yet consider appliance time frame crossing reset time (4am)
 2. EV and Battery Incorporation updated, though constants of the PSO algorithm (c1,c2,vmax) are still not finally determined (Sensitivity Analysis)
 3. Appliance Prioritization not yet updated, UserInput_Test2.m is being adjusted for this incorporation. 
