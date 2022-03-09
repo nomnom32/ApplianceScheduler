@@ -34,8 +34,11 @@ apps=ans;
 end
 
 %-----------------------------------------
+%these are the probabilities na wala per household size [dahil sa makedist
+%function]
 ESS = [7.14 6.67 9.05 19.86];
 EV = [28.57 22.67 21.11 22.6];
+%probs na based on household size (by row) and number (by column)
 SP = [16.67 41.67 16.67 25
       26.23 13.11 39.34 21.31
       22.929 8.9171 33.757 34.394
@@ -66,8 +69,10 @@ pd = makedist('PiecewiseLinear', 'x', [0 1 2 3 4], 'Fx', [0 SP(Household_size,1)
 SP_num = fix(random(pd));
 
 %-----------------------------------------------------------
-%Dynamic Threshold Portion
+%Peak Threshold Portion
+%TW is yet to be updated
 TW = transpose([16.7 70 38.66 57.99 220.75 207.25 70.11 361.14 141.4 50 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]);
+%56 total appliances and 24 hours in a day
 schedule = zeros(56,24);
 for x = 1:size(apps,1)
     %go to row# based on 1st column
@@ -81,17 +86,17 @@ for x = 1:size(apps,1)
         schedule(apps(x,1),z) = 1;
     end
 end
-%uncomment to see schedule
+%schedule will displays 0's and 1's
 schedule;
-%TW temp was
-%used!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+%TW temp was used!
 kWh = schedule.*TW;
+%finding the peak
 threshold = 0.8*max(sum(kWh));
 %--------------------------------------------------------------
 
 %Writing on a .m file
 
-%budget temporary
+%budget temporary placeholder code will follow
 budget = 1;
 
 
@@ -109,9 +114,12 @@ budget = 1;
 
 
 %fprintf(fileID,'%%Total Wattage: \n');
+%total wattagea s sum product of TW and Duration
 total_wattage = sum(apps(:,2).*apps(:,3));
 %fprintf(fileID,'%.2f\n',total_wattage);
 
+
+%prinring on the files
 fprintf(fileID,'%%ID H# HT PT TotW B \n');
 fprintf(fileID,'0 %d %d %.2f %.2f %.2f\n', identifier, Household_size, threshold, total_wattage, budget);
 
