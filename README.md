@@ -22,3 +22,13 @@ EVCode.m:
 - electric vehicles only charge when total hourly wattage < peak
 
 %% CITY GENERATION
+probability_data.m:
+- contains all raw data from processed survey tables excel sheet in matrix form
+
+Converter.m:
+- converter for probability data into input for the BPSO main code
+- still working on finalizing TW matrix, budget formula, splicing of time slots based on cut-off time
+
+final.m:
+- function found in Converter.m that generates the Appliance matrix which contain the relevant factors such as
+- Appliance Ownership, Usage, Duration, Start time, End time, Appliance Priority
