@@ -1,4 +1,4 @@
-function evcharge_t = EVCode(appsched,appwatt,peak,ev_int_ch)
+function evcharge_r = EVCode(appsched,appwatt,peak,ev_int_ch)
 t = 24;
 ev_operation=zeros(1,t);
 tempvar = appsched.*appwatt;
@@ -14,6 +14,7 @@ ev_rating = 3300;
 % https://evcompare.io/cars/changan/changan-ev360/
 
 EVCharge = (ev_int_ch/100)*ev_rating;
+evcharge_r = zeros(1,t);
 evcharge_t = zeros(1,t);
 HighThresh = 0.8*ev_rating;
 LowThresh = 0.2*ev_rating; 
@@ -44,6 +45,8 @@ for a=1:t
     end
     evcharge_t(1,a)=EVCharge;
 end
+
+evcharge_r = diff([(ev_int_ch/100)*ev_rating evcharge_t]); %positive if charging, 0 or positive lang
 
 %% Charging Function Code
 

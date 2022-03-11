@@ -40,8 +40,8 @@ for a=1:n
     end
 end
 
-batt_charge_rate = diff([batt_op(1,1) batt_op]); %positive if charging, %negative if charging
-ev_charge_rate = diff([ev_op(1,1) ev_op]); %positive if chaging, 0 or positive lang
+batt_charge_rate = diff([batt_op batt_op(1,24)]); %positive if charging, %negative if charging
+ev_charge_rate = diff([ev_op ev_op(1,24)]); %positive if chaging, 0 or positive lang
 app_hour_energy = zeros(1,24);
 
 %% Total Effective Consumption vs Peakthreshold by utility (Watts)

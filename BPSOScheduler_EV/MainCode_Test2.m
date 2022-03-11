@@ -35,6 +35,7 @@ for a=1:24
         PV(a,1) = 320;
     end
 end
+
 PV=PV*solar_own;
 
 % counts number of usage per appliance
@@ -123,12 +124,13 @@ for run=1:simulations
             end
             
             %Battery and EV Operation
-            if (batt_own==1)
-                batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy); %will update
-            end
             if (ev_own==1)
                 ev_op = EVCode(solution,app_TW, peak_threshold,ev_int_ch); %will update
             end
+            if (batt_own==1)
+                batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy,ev_op); %will update
+            end
+            
 
             %Fitness Function: To be evaluated later.
             %Basically, it processes all
@@ -205,8 +207,43 @@ for run=1:simulations
         solution(a,:)=sol_per_run(fittest_index,(a-1)*t+1:a*t);
     end 
 end
-solution
-batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy)
-ev_op = EVCode(solution,app_TW, peak_threshold,ev_int_ch)
-PV
+
+tempvar = solution.*app_TW;
+appenergy = sum(tempvar,1);
+ev_op = EVCode(solution,app_TW, peak_threshold,ev_int_ch);
+batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy,ev_op);
+x = linspace(1,24,24);
+total = appenergy+ev_op;
+
+for k=1:24 % Find total consumption from utility
+    if PV(k,1)>0
+        total(1,k) = total(1,k)-PV(k,1);
+    end
+    if batt_op(1,k) < 0
+        total(1,k) = total(1,k)+batt_op(1,k);
+    end
+    if total(1,k) <0
+        total(1,k)=0;
+    end
+end
+
 toc
+t = tiledlayout(3,2);
+nexttile
+bar(x,appenergy)
+title('Total Appliance Hourly Energy Usage')
+nexttile
+bar(x,batt_op)
+title('Battery Charge(+)/Discharge(-) Rates')
+nexttile
+bar(x,ev_op)
+title('EV Charge Rates')
+nexttile
+bar(x,transpose(PV))
+title('PV Energy Production')
+nexttile
+bar(x,appenergy+ev_op)
+title('Appliance+EV: No PV and Battery')
+nexttile
+bar(x,total)
+title('Total Consumption From Utility')
