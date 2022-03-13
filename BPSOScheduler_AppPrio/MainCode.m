@@ -1,7 +1,7 @@
 clear
 tic
 %% IMPORT INPUT DATA
-data=load('UserInput.m');
+data=load('UserInput_Test_Ave.m');
 price_code=1;%1=M-S(dry),2=M-S(wet),3=Sun(dry),4=Sun(wet)
 
 %Parsing input data
@@ -35,6 +35,7 @@ for a=1:24
         PV(a,1) = 320;
     end
 end
+
 PV=PV*solar_own;
 
 % counts number of usage per appliance
@@ -52,7 +53,6 @@ app_dur=zeros(n,mu); %Durations
 app_tA=zeros(n,mu); %Start Time
 app_tB=zeros(n,mu); %End Time
 app_R=zeros(n,1); % Appliance Rank
-
 
 use=1;
 for a=1:row_len
@@ -196,6 +196,5 @@ for run=1:simulations
     end 
 end
 solution
-batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy)
-PV
+batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy);
 toc
