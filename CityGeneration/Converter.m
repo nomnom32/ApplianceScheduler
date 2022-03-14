@@ -9,11 +9,12 @@ probability_data
 
 % DATA PROCESSING
 fileID = fopen('userinput.m','w');
-for identifier = 1:2
+plot = zeros(1,24);
+for identifier = 1:100
 
 %di parin ata updated yung household_size probabilities
 pd = makedist('PiecewiseLinear', 'x', [1 2 3 4 5], 'Fx', [0 0.034 0.185 0.723 1]);
-Household_size = fix(random(pd))
+Household_size = fix(random(pd));
 
 if Household_size ==1
 final(AO1,AU1,ST1,D1,PR1,ETF1)
@@ -95,7 +96,8 @@ kWh = schedule.*TW;
 threshold = 0.8*max(sum(kWh));
 %--------------------------------------------------------------
 %Plotting 
-plot = sum(kWh) + zeros(1,24);
+store = sum(kWh);
+plot = store + plot;
 
 %--------------------------------------------------------------
 %Writing on a .m file
@@ -150,7 +152,11 @@ fprintf(fileID,'100 %d 0 0 0 0\n\n',SP_num);
 end
 
 %plotting continued
+plot
 bar(plot)
+xlabel('Hours of the days');
+ylabel('kWh');
+title(['Total Energy Consumption'])
 
 toc
 

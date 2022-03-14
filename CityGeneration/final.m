@@ -246,7 +246,7 @@ total_wattage = sum(col2.*col4); %sum product
 col2;
 %------------------------------------------------------------------------------------
 
-apps_try = transpose([col1;col2;col4;col3;col5;col6]) %return the appliance matrix
+apps_try = transpose([col1;col2;col4;col3;col5;col6]); %return the appliance matrix
 
 
 %set the reser time of the day
