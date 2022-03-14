@@ -1,4 +1,4 @@
-function battcharge_r = BatteryCode(appsched, appwatt, PV, initial_charge, h_load, ev_charge_rate)
+function battcharge_r = BatteryCode(appsched, appwatt, PV, initial_charge, batt_size, ev_charge_rate)
 %% Test Input
 t = 24; 
 batteryoperation=zeros(1,t);
@@ -9,12 +9,12 @@ appenergy = sum(tempvar,1);
 imbalance = transpose(PV)-appenergy-ev_charge_rate;
 
 
-BattCharge = (initial_charge/100)*h_load; % initial charge
+BattCharge = (initial_charge/100)*batt_size; % initial charge
 battcharge_r = zeros(1,t);
 battcharge_t = zeros(1,t); % 24 hour battery current charge
-HighThresh = 1*h_load; 
-LowThresh = 0.4*h_load; 
-MaxBattCharge = 1*h_load;
+HighThresh = 1*batt_size; 
+LowThresh = 0.4*batt_size; 
+MaxBattCharge = 1*batt_size;
 % MinBattCharge = 0; 
 MinBattCharge = LowThresh; 
 
@@ -43,7 +43,7 @@ for a=1:t
     battcharge_t(1,a)=BattCharge; % Save Battcharge
 end
 
-battcharge_r = diff([(initial_charge/100)*h_load battcharge_t]); %positive if charging, %negative if charging
+battcharge_r = diff([(initial_charge/100)*batt_size battcharge_t]); %positive if charging, %negative if charging
 
 
 %% Charging Function Code
