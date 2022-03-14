@@ -37,7 +37,7 @@ end
 %     end
 % end
 
-batt_size = total_energy;
+batt_size=total_energy;
 
 %Solar Panel Operation %Assume constant for all households
 PV = zeros(24,1);
@@ -116,7 +116,7 @@ c2=9; %will be change in sensitivity analysis
 v_max=6; %will be change in sensitivity analysis
 validctr=0; %valid schedule counter
 max_iteration=500; %iteration per simulation
-simulations=1;
+simulations=5;
 
 checkd=zeros(1,simulations); %number of appliances with right duration in every simulation
 checki=zeros(1,simulations); %number of appliances with right interruption in every simulation
@@ -210,43 +210,49 @@ for run=1:simulations
                 end
             end
         end
-
-        sol_per_run(run,:)=gbest;
-        checki(1,run)=0; %new update of checking validity because it goes up to thousands, when the input is limited to 15 appliances only
-        checkd(1,run)=0;
-
-        %Constructs the matrix of the latest global best
-        for a=1:n
-            solution(a,:)=gbest(1,(a-1)*t+1:a*t);
-            on_times=sum(diff([0 solution(a,:)])==1); % count when time-(time-1) = 1, it means 0 to 1
-            if sum(solution(a,:))==sum(app_dur(a,:)) %checking duration validity by sum of the on time and duration time
-                checkd(1,run)=checkd(1,run)+1;
-            end
-            if on_times==app_usage(a) %checking interruption validity
-                checki(1,run)=checki(1,run)+1;  
-            end
-        end
-
-        %Checks if duration of operation and on times is met to be VALID!
-        if (checkd(1,run)==n &&checki(1,run)==n)
-            validctr=validctr+1;
-        end 
     end
-% prints fittest solution
-% note: sometimes fittest solution is not valid
-    [fittest, fittest_index]=min(minfit_per_ite(max_iteration,:));
+
+    sol_per_run(run,:)=gbest; % final global best of the 500 iterations-run
+    
     for a=1:n
-        solution(a,:)=sol_per_run(fittest_index,(a-1)*t+1:a*t);
+        solution(a,:)=gbest(1,(a-1)*t+1:a*t); % get appliance*24 hours 1 and 0 from final gbest
+    end
+
+    %Constructs the matrix of the latest global best
+    for a=1:n
+        on_times=sum(diff([0 solution(a,:)])==1);
+
+        %to accomodate 4am crossing
+        if (solution(a,1)==1 && solution(a,24)==1 && not(app_dur(a,1)==24))
+            on_times=on_times-1;
+        end
+        if sum(solution(a,:))==sum(app_dur(a,:)) %checking duration validity by sum of the on time and duration time
+            checkd(1,run)=checkd(1,run)+1;
+        end
+        if on_times==app_usage(a) %checking interruption validity
+            checki(1,run)=checki(1,run)+1;  
+        end
+    end
+
+    %Checks if duration of operation and on times is met to be VALID!
+    if (checkd(1,run)==n &&checki(1,run)==n)
+        validctr=validctr+1;
     end 
+    % prints fittest solution
+    % note: sometimes fittest solution is not valid
 end
+
+%% Final Solution
+[fittest, fittest_index]=min(minfit_per_ite(max_iteration,:));
+for a=1:n
+    solution(a,:)=sol_per_run(fittest_index,(a-1)*t+1:a*t);
+end 
 
 tempvar = solution.*app_TW;
 appenergy = sum(tempvar,1);
-
 orig_ev_op = EVCode(orig_sched,app_TW, peak_threshold,ev_int_ch);
 ev_op = EVCode(solution,app_TW, peak_threshold,ev_int_ch);
 batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy,ev_op);
-
 x = linspace(1,24,24);
 total = appenergy+ev_op;
 
