@@ -28,16 +28,14 @@ for i=1:row_len
     end
 end
 
-% batt_sizes = [6600,13000,19800];
-% for batt=batt_sizes
-%     batt_size=total_energy;
-%     if total_energy<batt
-%         batt_size=batt;
-%         break
-%     end
-% end
-
-batt_size=total_energy;
+%Battery Sizing
+batt = 1020; %batt size for https://www.rollsbattery.com/battery/12-fs-24/ 20 Hour Rate, 
+batt_size = batt;
+ctr = 2;
+while(batt_size<total_energy)
+    batt_size = batt_size+batt*ctr;
+    ctr=ctr+1;
+end
 
 %Solar Panel Operation %Assume constant for all households
 PV = zeros(24,1);
@@ -105,6 +103,7 @@ end
 
 orig_tempvar = orig_sched.*app_TW;
 orig_appenergy = sum(orig_tempvar,1);
+orig_ev_op = EVCode(orig_sched,app_TW, peak_threshold,ev_int_ch);
 
 %% INITIALIZATION OF PARAMETERS
 N=250; % number of particles
@@ -243,18 +242,24 @@ for run=1:simulations
 end
 
 %% Final Solution
-[fittest, fittest_index]=min(minfit_per_ite(max_iteration,:));
+[fittest, fittest_index]=min(minfit_per_ite(max_iteration,:)); % check minimum fitness for every run
 for a=1:n
     solution(a,:)=sol_per_run(fittest_index,(a-1)*t+1:a*t);
 end 
 
 tempvar = solution.*app_TW;
 appenergy = sum(tempvar,1);
-orig_ev_op = EVCode(orig_sched,app_TW, peak_threshold,ev_int_ch);
 ev_op = EVCode(solution,app_TW, peak_threshold,ev_int_ch);
 batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy,ev_op);
+
+cost = sum(transpose(appenergy.*price(price_code,:)),1);
+
+
+%% Plotting
+
 x = linspace(1,24,24);
 total = appenergy+ev_op;
+batt_op_charging = batt_op;
 
 for k=1:24 % Find total consumption from utility
     if PV(k,1)>0
@@ -262,14 +267,30 @@ for k=1:24 % Find total consumption from utility
     end
     if batt_op(1,k) < 0
         total(1,k) = total(1,k)+batt_op(1,k);
+        batt_op_charging(1,k)=0;
     end
     if total(1,k) <0
         total(1,k)=0;
     end
+    
 end
 
+
+
+excess = transpose(PV)-appenergy-batt_op_charging
+
+for k=1:24
+    if excess(1,k)<0
+        excess(1,k)=0;
+    end
+end
+
+final_cost = sum(transpose(total.*price(price_code,:)),1)-sum(transpose(excess.*price(price_code,:)))
+
 toc
-t = tiledlayout(4,2);
+
+
+t = tiledlayout(5,2);
 nexttile
 bar(x,orig_appenergy)
 title('Total  Hourly Energy Usage (Original)')
@@ -292,7 +313,15 @@ nexttile
 bar(x,transpose(PV))
 title('PV Energy Production')
 nexttile
+bar(x,excess)
+title('PV Selling Production')
+nexttile
 bar(x,total)
 title('Total Consumption From Utility')
+
+
 solution
 validctr
+fittest
+checki
+checkd

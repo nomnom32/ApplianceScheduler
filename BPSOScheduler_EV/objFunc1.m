@@ -1,4 +1,4 @@
-function OF = objFunc(n, t, sched, price, usage, tw, duration, tA, tB, budget, peak, mu, ev_op, batt_op, PV)
+function OF = objFunc(n, t, sched, price, usage, tw, dur, tA, tB, budget, peak, mu, ev_op, batt_op, PV)
 
 
 % n = number of appliances
@@ -108,13 +108,19 @@ for a=1:n % do for all n appliances
         S_ave=0; % 0 if no on time
     else
         for b=1:usage(a) % do for all usage times
-            if (t_fin(a,b)<=tB(a,b)&& t_fin(a,b)>=(tA(a,b)+duration(a,b)-1))
-                s_n=(t_fin(a,b)-(tB(a,b)+1))/(tA(a,b)+(duration(a,b)-1)-(tB(a,b)+1));
+            if (tA(a,b)>tB(a,b))
+                tB(a,b)=tB(a,b)+24;
+            end
+            if (tA(a,b)>t_fin(a,b))
+                t_fin(a,b)=t_fin(a,b)+24;
+            end
+            if (t_fin(a,b)<=tB(a,b)&& t_fin(a,b)>=(tA(a,b)+dur(a,b)-1))
+                s_n=((t_fin(a,b)-(tB(a,b)+1))/(tA(a,b)+(dur(a,b)-1)-(tB(a,b)+1)));
             else
                 s_n=0; % if t_fin is not in preferred range
                 if t_strt(a,b)<tA(a,b) 
                     out_of_bounds=out_of_bounds+tA(a,b)-t_strt(a,b);
-                elseif t_fin(a,b)>tB(a,b ) 
+                elseif t_fin(a,b)>tB(a,b) 
                     out_of_bounds=out_of_bounds+t_fin(a,b)-tB(a,b);
                 end
             end
@@ -132,6 +138,10 @@ TDS=TDS*P_dissat*1*Mtds;
 TI=0;
 for a=1:n
     on_times=sum(diff([0 sched(a,:)])==1);
+    %to accomodate 4am crossing
+    if (sched(a,1)==1 && sched(a,24)==1 && not(dur(a,1)==24))
+        on_times=on_times-1;
+    end
     I=abs(on_times-usage(a));
     TI=TI+(I*P_int*Mint);
 end
@@ -141,9 +151,14 @@ for a=1:n
     D=0;
     on_tot=0;
     for b=1:usage(a)
-        on=sum(sched(a,tA(a,b):tB(a,b)));
+        if (tB(a,b)>24) %to accomodate 4am crossing
+            tB(a,b)=tB(a,b)-24;
+            on=sum(sched(a,tA(a,b):24))+sum(sched(a,1:tB(a,b)));
+        else
+            on=sum(sched(a,tA(a,b):tB(a,b)));
+        end
         on_tot=on_tot+on;
-        D=D+abs((on-duration(a,b)));
+        D=D+abs((on-dur(a,b)));
     end
     d_excess=abs(sum(sched(a,:))-on_tot);
     TD=TD+D+d_excess;
