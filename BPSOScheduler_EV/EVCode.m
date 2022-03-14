@@ -22,7 +22,7 @@ MaxBattCharge = 1*ev_rating;
 MinBattCharge = 0;
 
 for a=1:t
-    if (a<=6)||(a>=18)
+    if (a<=2)||(a>=15)
         if (HighThresh<=EVCharge)&&(EVCharge<=MaxBattCharge)
             ev_operation(a) = 0;
         elseif (LowThresh<EVCharge)&&(EVCharge <HighThresh)
