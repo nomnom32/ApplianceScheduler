@@ -30,14 +30,14 @@ end
 
 %manipulating the MCA_AO para maincorporate yung OA -> we only want 5 OA's
 MCA_AO = owner(:,1:10); %keep the main appliances
-randomizer = randperm(46) + 10; %get 5 random OA indices
+randomizer = randperm(42) + 10; %get 5 random OA indices
 randomizer = randomizer(:,1:5);
 
 MCA_AO_template = zeros(size(owner)); %0's and 1's matrix where 1's indicate potential ownership something
 for x = 1:5
     MCA_AO_template(1,randomizer(1,x)) = owner(1,randomizer(1,x)); 
 end
-MCA_AO = [MCA_AO, MCA_AO_template(:,11:56)];
+MCA_AO = [MCA_AO, MCA_AO_template(:,11:52)];
 
 %CHECKER;
 MCA_AO;
@@ -230,7 +230,7 @@ col5;
 
 %------------------------------------------------------------------------------------
 col2 = [];
-TW = [16.7 70 38.66 57.99 220.75 207.25 70.11 361.14 141.4 50 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
+TW = [16.7 70 38.66 57.99 220.75 207.25 70.11 361.14 141.4 60 276 26.5 7.8 320 166 47.3 576.7 10 23.23 150 8.5 152 20 333.7 1.1 412.2 3 25 30.2 596.8 302.9 185 1500 80.8 1500 10.3 30.2 1500 24 504.5 660 440 4.9 105.5 26.8 120 35 150 75 10 361.14 1200];
 
 for x = 1:size(col1,2)
     col2 = [col2,(TW(1,col1(1,x))*MCA_AO(1,col1(1,x)))];
@@ -246,8 +246,32 @@ total_wattage = sum(col2.*col4); %sum product
 col2;
 %------------------------------------------------------------------------------------
 
-apps_try = transpose([col1;col2;col4;col3;col5;col6]); %return the appliance matrix
+apps_try = transpose([col1;col2;col4;col3;col5;col6]) %return the appliance matrix
 
+
+%set the reser time of the day
+cut_off = 4;
+for x = 1:size(apps_try,1)
+    if apps_try(x,4) < cut_off
+        apps_try(x,4) = apps_try(x,4) - cut_off + 1 + 24;
+    elseif apps_try(x,4) == cut_off - 1
+        apps_try(x,4) = 24;
+    else
+        apps_try(x,4) = apps_try(x,4) - cut_off + 1;
+    end
+
+    if apps_try(x,5) < cut_off
+        apps_try(x,5) = apps_try(x,5) - cut_off + 24;
+    elseif apps_try(x,5) == cut_off
+        apps_try(x,5) = 24;
+    else
+        apps_try(x,5) = apps_try(x,5) - cut_off;
+    end
+end
+
+apps = apps_try;
+
+%might not be used code
 
 %pre = size(apps_try)
 %------------------------------------------------------------------------------------
@@ -281,7 +305,7 @@ apps_try = transpose([col1;col2;col4;col3;col5;col6]); %return the appliance mat
 %apps_try = sortrows(transpose(apps_try),1);
 %
 %
-apps = apps_try;
+%apps = apps_try;
 %after = size(apps)
 end
 

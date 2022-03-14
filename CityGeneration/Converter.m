@@ -9,11 +9,11 @@ probability_data
 
 % DATA PROCESSING
 fileID = fopen('userinput.m','w');
-for identifier = 1:2000
+for identifier = 1:2
 
 %di parin ata updated yung household_size probabilities
 pd = makedist('PiecewiseLinear', 'x', [1 2 3 4 5], 'Fx', [0 0.034 0.185 0.723 1]);
-Household_size = fix(random(pd));
+Household_size = fix(random(pd))
 
 if Household_size ==1
 final(AO1,AU1,ST1,D1,PR1,ETF1)
@@ -71,9 +71,10 @@ SP_num = fix(random(pd));
 %-----------------------------------------------------------
 %Peak Threshold Portion
 %TW is yet to be updated
-TW = transpose([16.7 70 38.66 57.99 220.75 207.25 70.11 361.14 141.4 50 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]);
-%56 total appliances and 24 hours in a day
-schedule = zeros(56,24);
+
+TW = transpose([16.7 70 38.66 57.99 220.75 207.25 70.11 361.14 141.4 60 276 26.5 7.8 320 166 47.3 576.7 10 23.23 150 8.5 152 20 333.7 1.1 412.2 3 25 30.2 596.8 302.9 185 1500 80.8 1500 10.3 30.2 1500 24 504.5 660 440 4.9 105.5 26.8 120 35 150 75 10 361.14 1200]);
+%52 total appliances and 24 hours in a day
+schedule = zeros(52,24);
 for x = 1:size(apps,1)
     %go to row# based on 1st column
     %go to column# based on 4th column
@@ -93,7 +94,10 @@ kWh = schedule.*TW;
 %finding the peak
 threshold = 0.8*max(sum(kWh));
 %--------------------------------------------------------------
+%Plotting 
+plot = sum(kWh) + zeros(1,24);
 
+%--------------------------------------------------------------
 %Writing on a .m file
 
 %budget temporary placeholder code will follow
@@ -144,6 +148,10 @@ fprintf(fileID,'99 %d %d 0 0 0\n',EV_possess, EV_charge);
 fprintf(fileID,'%%Solar Panels: \n');
 fprintf(fileID,'100 %d 0 0 0 0\n\n',SP_num);
 end
+
+%plotting continued
+bar(plot)
+
 toc
 
 
