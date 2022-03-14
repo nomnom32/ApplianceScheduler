@@ -1,7 +1,7 @@
 clear
 tic
 %% IMPORT INPUT DATA
-data=load('UserInput_Test2.m');
+data=load('UserInput_Test_Ave.m');
 price_code=1;%1=M-S(dry),2=M-S(wet),3=Sun(dry),4=Sun(wet)
 
 %Parsing input data
@@ -25,6 +25,15 @@ for i=1:row_len
         ev_int_ch=data(i,3);
     elseif(data(i,1)==100)
         solar_own=data(i,2);
+    end
+end
+
+batt_sizes = [6600,13000,19800];
+for batt=batt_sizes
+    batt_size=total_energy;
+    if total_energy<batt
+        batt_size=batt;
+        break
     end
 end
 
@@ -73,7 +82,28 @@ for a=1:row_len
         end
     end
 end 
- 
+
+orig_sched = zeros(n,24);
+
+for i=1:n
+    for j=1:mu
+        if app_dur(i,j)==0
+            orig_sched(i,j)=orig_sched(i,j);
+        else 
+            for k=0:app_dur(i,j)-1
+                l=app_tA(i,j)+k;
+                if l>24
+                    l=l-24;
+                end
+                orig_sched(i,l)=1;
+            end
+        end
+    end
+end
+
+orig_tempvar = orig_sched.*app_TW;
+orig_appenergy = sum(orig_tempvar,1);
+
 %% INITIALIZATION OF PARAMETERS
 N=250; % number of particles
 t=24; % 24 hours
@@ -128,7 +158,7 @@ for run=1:simulations
                 ev_op = EVCode(solution,app_TW, peak_threshold,ev_int_ch); %will update
             end
             if (batt_own==1)
-                batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy,ev_op); %will update
+                batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,batt_size,ev_op); %will update
             end
             
 
@@ -210,8 +240,11 @@ end
 
 tempvar = solution.*app_TW;
 appenergy = sum(tempvar,1);
+
+orig_ev_op = EVCode(orig_sched,app_TW, peak_threshold,ev_int_ch);
 ev_op = EVCode(solution,app_TW, peak_threshold,ev_int_ch);
 batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy,ev_op);
+
 x = linspace(1,24,24);
 total = appenergy+ev_op;
 
@@ -228,22 +261,30 @@ for k=1:24 % Find total consumption from utility
 end
 
 toc
-t = tiledlayout(3,2);
+t = tiledlayout(4,2);
+nexttile
+bar(x,orig_appenergy)
+title('Total  Hourly Energy Usage (Original)')
+nexttile
+bar(x,orig_appenergy+orig_ev_op)
+title('Original App Sched+EV')
 nexttile
 bar(x,appenergy)
-title('Total Appliance Hourly Energy Usage')
+title('Total Hourly Energy Usage (BPSO)')
+nexttile
+bar(x,appenergy+ev_op)
+title('BPSO App Sched+EV')
 nexttile
 bar(x,batt_op)
 title('Battery Charge(+)/Discharge(-) Rates')
 nexttile
 bar(x,ev_op)
-title('EV Charge Rates')
+title('EV Charge Rates (BPSO)')
 nexttile
 bar(x,transpose(PV))
 title('PV Energy Production')
 nexttile
-bar(x,appenergy+ev_op)
-title('Appliance+EV: No PV and Battery')
-nexttile
 bar(x,total)
 title('Total Consumption From Utility')
+solution
+validctr
