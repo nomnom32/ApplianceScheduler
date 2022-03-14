@@ -28,14 +28,16 @@ for i=1:row_len
     end
 end
 
-batt_sizes = [6600,13000,19800];
-for batt=batt_sizes
-    batt_size=total_energy;
-    if total_energy<batt
-        batt_size=batt;
-        break
-    end
-end
+% batt_sizes = [6600,13000,19800];
+% for batt=batt_sizes
+%     batt_size=total_energy;
+%     if total_energy<batt
+%         batt_size=batt;
+%         break
+%     end
+% end
+
+batt_size = total_energy;
 
 %Solar Panel Operation %Assume constant for all households
 PV = zeros(24,1);
