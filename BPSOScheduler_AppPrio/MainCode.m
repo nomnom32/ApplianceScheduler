@@ -1,7 +1,7 @@
 clear
 tic
 %% IMPORT INPUT DATA
-data=load('UserInput_Test_Ave.m');
+data=load('UserInput_Test_MostProb.m');
 price_code=1;%1=M-S(dry),2=M-S(wet),3=Sun(dry),4=Sun(wet)
 
 %Parsing input data
@@ -72,15 +72,27 @@ for a=1:row_len
         end
     end
 end 
- 
+
+batt = 1020; %batt size for https://www.rollsbattery.com/battery/12-fs-24/ 20 Hour Rate, 
+batt_size = batt;
+
+batt_ctr = 1;
+while(batt_size<total_energy)
+    batt_ctr=batt_ctr+1;
+    batt_size = batt*batt_ctr;
+end
+
 %% INITIALIZATION OF PARAMETERS
+%for v_max=5:7
+%for c1=10:15
+%c2=c1;
 N=250; % number of particles
 t=24; % 24 hours
 dim=n*t; %dimension of a particle in a single row
 price = tou_rates24(t); %Time of Use Rates
-c1=9; %will be change in sensitivity analysis
-c2=9; %will be change in sensitivity analysis
-v_max=6; %will be change in sensitivity analysis
+c1=8; %will be change in sensitivity analysis
+c2=8; %will be change in sensitivity analysis
+v_max=5; %will be change in sensitivity analysis
 validctr=0; %valid schedule counter
 max_iteration=500; %iteration per simulation
 simulations=1;
@@ -91,90 +103,94 @@ minfit_per_ite=zeros(max_iteration,simulations); %minimum fitness per iteration
 sol_per_run=zeros(simulations,dim);
 %% BPSO
 for run=1:simulations
-    itectr=0;
+        itectr=0;
 
-    %Allocations
-    sig=zeros(N,dim); %particle x appliance*time  250 rows X 24*n column
-    solution=zeros(n,t); %solution
-    fitness=zeros(N,1); % fitness
-    pbest=ones(N,dim); % personal best same size with sig
-    gbest=ones(1,dim); % global best, only 1 solution
-    pbest_fitness=ones(N,1); %fitness per particle
-    batt_op = zeros(1,t); %battery operation
+        %Allocations
+        sig=zeros(N,dim); %particle x appliance*time  250 rows X 24*n column
+        solution=zeros(n,t); %solution
+        fitness=zeros(N,1); % fitness
+        pbest=ones(N,dim); % personal best same size with sig
+        gbest=ones(1,dim); % global best, only 1 solution
+        pbest_fitness=ones(N,1); %fitness per particle
+        batt_op = zeros(1,t); %battery operation
 
-    %Initial position and velocity
-    sched=round(rand(N,dim)); %initial 1 and 0
-    v=round(-v_max+(rand(N,dim)*(2*v_max))); %initial velocity
+        %Initial position and velocity
+        sched=round(rand(N,dim)); %initial 1 and 0
+        v=round(-v_max+(rand(N,dim)*(2*v_max))); %initial velocity
 
-    %Start of BPSO Algorithm
+        %Start of BPSO Algorithm
 
-    while itectr<max_iteration
-        itectr=itectr+1;
-        w=1; %inertia weight
-        
-        %Evaluation of Fitness
-        for a=1:N
-            for b=1:n
-                solution(b,:)=sched(a,(b-1)*t+1:b*t); %solution = type of appliance * 24 hours
+        while itectr<max_iteration
+            itectr=itectr+1;
+            w=1; %inertia weight
+
+            %Evaluation of Fitness
+            for a=1:N
+                for b=1:n
+                    solution(b,:)=sched(a,(b-1)*t+1:b*t); %solution = type of appliance * 24 hours
+                end
+
+                %Battery Operation
+                if (batt_own==1)
+                    batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,batt_size,batt_ctr); %will update
+                end
+
+                %Fitness Function: To be evaluated later.
+                 fitness(a,itectr)=objFunc(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, app_R, user_budget, peak_threshold, mu, batt_op, PV);
             end
-            
-            %Battery Operation
-            if (batt_own==1)
-                batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy); %will update
+
+            %Updating Pbest of Each Particle
+            for a=1:N
+                if (itectr==1 || fitness(a,itectr) < pbest_fitness(a,1)) %start initialization and if performance is less than current pbest
+                    pbest_fitness(a,1)=fitness(a,itectr);
+                    pbest(a,:)=sched(a,:);
+                end
             end
 
-            %Fitness Function: To be evaluated later.
-             fitness(a,itectr)=objFunc(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, app_R, user_budget, peak_threshold, mu, batt_op, PV);
-        end
-        
-        %Updating Pbest of Each Particle
-        for a=1:N
-            if (itectr==1 || fitness(a,itectr) < pbest_fitness(a,1)) %start initialization and if performance is less than current pbest
-                pbest_fitness(a,1)=fitness(a,itectr);
-                pbest(a,:)=sched(a,:);
-            end
-        end
+            %Updating Gbest
+            [fmin, fmin_index]=min(pbest_fitness); %finds best fitness, with its index
+            minfit_per_ite(itectr,run)=fmin; %stores gbest value per iteration on every run
+            if (itectr==1 || fmin < gbest_fitness)
+                gbest_fitness=fmin;
+                gbest=pbest(fmin_index,:);
+            end 
 
-        %Updating Gbest
-        [fmin, fmin_index]=min(pbest_fitness); %finds best fitness, with its index
-        minfit_per_ite(itectr,run)=fmin; %stores gbest value per iteration on every run
-        if (itectr==1 || fmin < gbest_fitness)
-            gbest_fitness=fmin;
-            gbest=pbest(fmin_index,:);
-        end 
-        
-        %Updating Velocity
-        for a=1:N
-            for b=1:dim
-                v(a,b)=w*v(a,b)+(c1*rand()*(pbest(a,b)-sched(a,b)))+(c2*rand()*(gbest(1,b)-sched(a,b)));
-                if v(a,b)>v_max %limiting velocity within [-v_max,v_max]
-                    v(a,b)=v_max;
-                elseif v(a,b)<-v_max
-                    v(a,b)=-v_max;
-                end 
+            %Updating Velocity
+            for a=1:N
+                for b=1:dim
+                    v(a,b)=w*v(a,b)+(c1*rand()*(pbest(a,b)-sched(a,b)))+(c2*rand()*(gbest(1,b)-sched(a,b)));
+                    if v(a,b)>v_max %limiting velocity within [-v_max,v_max]
+                        v(a,b)=v_max;
+                    elseif v(a,b)<-v_max
+                        v(a,b)=-v_max;
+                    end 
+                end
             end
-        end
-        
-        % Sig function and Updating Position based from Updated Velocity
-        for a=1:N
-            for b=1:dim
-                sig(a,b)=1/(1+exp(-v(a,b)));
-                if sig(a,b)>rand()
-                    sched(a,b)=1;
-                elseif sig(a,b)<rand()
-                    sched(a,b)=0;
+
+            % Sig function and Updating Position based from Updated Velocity
+            for a=1:N
+                for b=1:dim
+                    sig(a,b)=1/(1+exp(-v(a,b)));
+                    if sig(a,b)>rand()
+                        sched(a,b)=1;
+                    elseif sig(a,b)<rand()
+                        sched(a,b)=0;
+                    end
                 end
             end
         end
-
         sol_per_run(run,:)=gbest;
-        checki(1,run)=0; %new update of checking validity because it goes up to thousands, when the input is limited to 15 appliances only
-        checkd(1,run)=0;
+
+        for a=1:n
+            solution(a,:)=gbest(1,(a-1)*t+1:a*t);
+        end
 
         %Constructs the matrix of the latest global best
         for a=1:n
-            solution(a,:)=gbest(1,(a-1)*t+1:a*t);
             on_times=sum(diff([0 solution(a,:)])==1); % count when time-(time-1) = 1, it means 0 to 1
+            if (solution(a,1)==1 && solution(a,24)==1 && not(app_dur(a,1)==24))
+                on_times=on_times-1;
+            end
             if sum(solution(a,:))==sum(app_dur(a,:)) %checking duration validity by sum of the on time and duration time
                 checkd(1,run)=checkd(1,run)+1;
             end
@@ -187,14 +203,75 @@ for run=1:simulations
         if (checkd(1,run)==n &&checki(1,run)==n)
             validctr=validctr+1;
         end 
-    end
+end
 % prints fittest solution
 % note: sometimes fittest solution is not valid
-    [fittest, fittest_index]=min(minfit_per_ite(max_iteration,:));
-    for a=1:n
-        solution(a,:)=sol_per_run(fittest_index,(a-1)*t+1:a*t);
-    end 
+[fittest, fittest_index]=min(minfit_per_ite(max_iteration,:));
+for a=1:n
+    solution(a,:)=sol_per_run(fittest_index,(a-1)*t+1:a*t);
+end 
+%end
+%end
+
+tempvar = solution.*app_TW;
+appenergy = sum(tempvar,1);
+batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,batt_size, batt_ctr);
+
+cost = sum(transpose(appenergy.*price(price_code,:)),1);
+
+
+%% Plotting
+
+x = linspace(1,24,24);
+total = appenergy;
+batt_op_charging = batt_op;
+
+for k=1:24 % Find total consumption from utility
+    if PV(k,1)>0
+        total(1,k) = total(1,k)-PV(k,1);
+    end
+    if batt_op(1,k) < 0
+        total(1,k) = total(1,k)+batt_op(1,k);
+        batt_op_charging(1,k)=0;
+    end
+    if total(1,k) <0
+        total(1,k)=0;
+    end
+    
 end
+
+
+
+excess = transpose(PV)-appenergy-batt_op_charging;
+
+for k=1:24
+    if excess(1,k)<0
+        excess(1,k)=0;
+    end
+end
+
+final_cost = sum(transpose(total.*price(price_code,:)),1)-sum(transpose(excess.*price(price_code,:)));
+
+toc;
+
+
+t = tiledlayout(3,2);
+nexttile
+bar(x,appenergy)
+title('Total Hourly Energy Usage (BPSO)')
+nexttile
+bar(x,batt_op)
+title('Battery Charge(+)/Discharge(-) Rates')
+nexttile
+bar(x,transpose(PV))
+title('PV Energy Production')
+nexttile
+bar(x,excess)
+title('PV Selling Production')
+nexttile
+bar(x,total)
+title('Total Consumption From Utility')
+
 solution
-batt_op = BatteryCode(solution,app_TW, PV,batt_int_ch,total_energy);
-toc
+validctr
+fittest

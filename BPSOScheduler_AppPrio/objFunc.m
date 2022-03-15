@@ -1,4 +1,4 @@
-function OF = objFunc(n, t, sched, price, usage, tw, duration, tA, tB, R, budget, peak, mu, batt_op, PV)
+function OF = objFunc(n, t, sched, price, usage, tw, duration, tA, tB, pR, budget, peak, mu, batt_op, PV)
 
 
 % n = number of appliances
@@ -9,6 +9,7 @@ function OF = objFunc(n, t, sched, price, usage, tw, duration, tA, tB, R, budget
 % price = 1 x t matrix
 % usage,tw = n x 1 matrix (per appliance)
 % duration, tA, tB = n x mu(per appliance)
+% pR = n x 1 matrix
 % budget, peak = constant
 % PV = m x t matrix
 
@@ -108,13 +109,13 @@ for a=1:n % do for all n appliances
     else
         for b=1:usage(a) % do for all usage times
             if (tA(a,b)>tB(a,b))
-                tB(a,b)=tB(a,b)+24;
+                tB(a,b)=tB(a,b)+24; %to incorporate 4am crossing
             end
             if (tA(a,b)>t_fin(a,b))
-                t_fin(a,b)=t_fin(a,b)+24;
+                t_fin(a,b)=t_fin(a,b)+24; %to incorporate 4am crossing
             end
             if (t_fin(a,b)<=tB(a,b)&& t_fin(a,b)>=(tA(a,b)+duration(a,b)-1))
-                s_n=(1/R(a))*((t_fin(a,b)-(tB(a,b)+1))/(tA(a,b)+(duration(a,b)-1)-(tB(a,b)+1)));
+                s_n=((t_fin(a,b))*((n-pR(a))/(n-1))-(tB(a,b)+1))/((tA(a,b)+(duration(a,b)-1))*((n-pR(a))/(n-1))-(tB(a,b)+1));
             else
                 s_n=0; % if t_fin is not in preferred range
                 if t_strt(a,b)<tA(a,b) 
@@ -138,7 +139,7 @@ TI=0;
 for a=1:n
     on_times=sum(diff([0 sched(a,:)])==1);
     %to accomodate 4am crossing
-    if (sched(a,1)==1 && sched(a,24)==1)
+    if (sched(a,1)==1 && sched(a,24)==1 && not(duration(a,1)==24))
         on_times=on_times-1;
     end
     I=abs(on_times-usage(a));
