@@ -130,7 +130,7 @@ for z = 1:size(MCA_AO,2)
             %nag add ako ng extra sa dulo para masubtract yung Last sa 1st
             %element while preserving the "time element" kaya may
             %[24+start] - end
-            difference = [diff(col3_revised),24-col3_revised(end)+col3_revised(1,1)];
+            difference = [diff(col3_revised),24-col3_revised(end)+col3_revised(1,1)];46
             col4_temp = [];
 
             %we check if multiple entries ba kasi if hindi wala namang
@@ -175,7 +175,10 @@ for z = 1:size(MCA_AO,2)
                     %ipagsabay ang timeframe kasi why not -> this is also
                     %the end time generation
                     data = [0,ETF(z,:)];
-                    a = [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24];
+                    %Edited out code below because of +1 ETF request by
+                    %Rain
+                    %a = [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24];
+                    a = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25];
                     pd = makedist('PiecewiseLinear', 'x', [a], 'Fx', [data]);
                     num_2 = fix(random(pd));
                     %end = start + duration + extra time frame
