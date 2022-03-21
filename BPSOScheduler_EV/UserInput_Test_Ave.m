@@ -16,7 +16,7 @@
 %Battery (Ownership and Intial Charge) 
 98 1 40 0 0 0  
 %EV (Ownership and Intial Charge)
-99 1 60 0 0 0  
+99 1 20 0 0 0  
 %Solar (No. of Solar Panels)
 100 3 0 0 0 0 
 
