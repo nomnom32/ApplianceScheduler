@@ -1,73 +1,53 @@
-function evcharge_r = EVCode(appsched,appwatt,peak,ev_int_ch)
-t = 24;
-ev_operation=zeros(1,t);
+function evcharge_t = EVCode(appsched,appwatt,peak,ev_int_ch)
+
 tempvar = appsched.*appwatt;
 appenergy = sum(tempvar,1);
 imbalance = peak-appenergy; 
 
+%% TYPE of EV
 %e-trike
 ev_rating = 3300;
-%https://gulfnews.com/world/asia/philippines/900-e-trikes-deployed-in-manila-1.2230670
+% DOD 80%, 20% Limit
+% 48V 70 AH 2000 cycles at 80%
+% C = 
+% E-Trike in PH: https://gulfnews.com/world/asia/philippines/900-e-trikes-deployed-in-manila-1.2230670
+% E-Trike in PH: https://www.bemac-philippines.com/en/updates/news-from-the-web
+% E-Trike Specs: https://www.adb.org/sites/default/files/linked-documents/43207-013-phi-oth-12.pdf
+% Liffe Cycle: https://www.bimblesolar.com/batterycompare
+% Charging Rate: https://www.robotshop.com/media/files/pdf/hyperion-99v-2100mah-lifepo4-transmitter-pack-datasheet.pdf
+
 
 % e-car
 % ev_rating = 34000;
 % https://evcompare.io/cars/changan/changan-ev360/
 
-EVCharge = (ev_int_ch/100)*ev_rating;
-evcharge_r = zeros(1,t);
-evcharge_t = zeros(1,t);
-HighThresh = 0.8*ev_rating;
-LowThresh = 0.2*ev_rating; 
-MaxBattCharge = 1*ev_rating;
-MinBattCharge = 0;
+%% Main Function
 
-for a=1:t
-    if (a<=2)||(a>=15)
-        if (HighThresh<=EVCharge)&&(EVCharge<=MaxBattCharge)
-            ev_operation(a) = 0;
-        elseif (LowThresh<EVCharge)&&(EVCharge <HighThresh)
-            if (imbalance(a)>0)
-                EVCharge = charging(EVCharge,imbalance(a),HighThresh);
-                ev_operation(a) = 1;
-            else
-                ev_operation(a)= 0;
-            end
-        elseif (EVCharge<=LowThresh)
-            if (imbalance(a)>0)
-                EVCharge = charging(EVCharge,imbalance(a),HighThresh);
-                ev_operation(a) = 1;
-            elseif (imbalance(a)<=0)
-                ev_operation(a)= 0;
-            end
+evcharge_t = zeros(1,12);
+HighThresh = 0.8*ev_rating-(ev_int_ch/100)*ev_rating;
+
+[sorted,sorted_index]=sort([imbalance(1,1:2) imbalance(1,15:24)],'descend'); %sort 6pm to 6am
+layer = abs(diff([sorted 0]));
+
+ctr=12; 
+
+for a=1:12 % 
+    if layer(1,a)>0 && (layer(1,a)*a)+sum(transpose(evcharge_t),1)<HighThresh
+        for k=1:a % from 1 to current stair
+            evcharge_t(1,sorted_index(1,k))= evcharge_t(1,sorted_index(1,k))+layer(1,a);
         end
-    else
-        ev_operation(a) = 0;
+    elseif layer(1,a)>0 && (layer(1,a)*a)+sum(transpose(evcharge_t),1)>HighThresh
+        excess=HighThresh-sum(transpose(evcharge_t),1);
+        ctr=a;
+        break
     end
-    evcharge_t(1,a)=EVCharge;
 end
 
-evcharge_r = diff([(ev_int_ch/100)*ev_rating evcharge_t]); %positive if charging, 0 or positive lang
-
-%% Charging Function Code
-
-function EnergyCharged = charging(BattCharge,imbalance,MaxBattCap)
-    NewBattCharge= BattCharge+abs(imbalance);
-    if (NewBattCharge>MaxBattCap)
-        NewBattCharge=MaxBattCap;
-    end
-EnergyCharged = NewBattCharge;
+for a=1:ctr
+    evcharge_t(1,sorted_index(1,a))= evcharge_t(1,sorted_index(1,a))+excess/ctr;
 end
 
+evcharge_t = [evcharge_t(1,1:2) zeros(1,12) evcharge_t(1,3:12)]; %positive if charging, 0 or positive lang
 
-%% Discharging Function
-function EnergyDischarged = discharging(BattCharge,imbalance,MinBattCap)
-    NewBattCharge= BattCharge-abs(imbalance);
-    if (NewBattCharge<MinBattCap)
-        NewBattCharge = MinBattCap;
-    end
-EnergyDischarged = NewBattCharge;
-end
-
-end
 
 
