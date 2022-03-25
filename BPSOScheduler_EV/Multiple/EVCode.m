@@ -44,29 +44,6 @@ for a=1:ctr
     evcharge_t(1,sorted_index(1,a))= evcharge_t(1,sorted_index(1,a))+excess/ctr;
 end
 
-%% Testing Code with Limit
-
-% excess1=0;
-% limited=0;
-% count=0;
-% 
-% for a=1:12 % 
-%     if layer(1,a)>0 && (layer(1,a)*a)+sum(transpose(evcharge_t),1)<HighThresh % Normal Distribution
-%         for k=1:a % from 1 to current stair
-%             if evcharge_t(1,sorted_index(1,k))+layer(1,a)<limit
-%                 evcharge_t(1,sorted_index(1,k))= evcharge_t(1,sorted_index(1,k))+layer(1,a)
-%             else
-%                 excess1=excess1+(limit-evcharge_t(1,sorted_index(1,k)))
-%                 evcharge_t(1,sorted_index(1,k))= limit
-%                 count=a
-%             end
-%         end
-% 
-%     elseif layer(1,a)>0 && (layer(1,a)*a)+sum(transpose(evcharge_t),1)>HighThresh %
-%         excess=HighThresh-sum(transpose(evcharge_t),1)
-%         break
-%     end
-% end 
 
 
 %% Excesss
