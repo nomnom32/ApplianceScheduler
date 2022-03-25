@@ -175,6 +175,8 @@ for z = 1:size(MCA_AO,2)
                     %ipagsabay ang timeframe kasi why not -> this is also
                     %the end time generation
                     data = [0,ETF(z,:)];
+                    %debug for zero endings
+                    data(end) = 1;
                     %Edited out code below because of +1 ETF request by
                     %Rain
                     %a = [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24];
