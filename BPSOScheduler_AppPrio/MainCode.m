@@ -1,7 +1,7 @@
 clear
 tic
 %% IMPORT INPUT DATA
-data=load('UserInput_Test_MostProb.m');
+data=load('UserInput_T3.m');
 price_code=1;%1=M-S(dry),2=M-S(wet),3=Sun(dry),4=Sun(wet)
 
 %Parsing input data
@@ -31,7 +31,7 @@ end
 %Solar Panel Operation %Assume constant for all households
 PV = zeros(24,1);
 for a=1:24
-    if ((a>=10)&&(a<=14))
+    if ((a>=7)&&(a<=11))
         PV(a,1) = 320;
     end
 end
@@ -82,20 +82,24 @@ while(batt_size<total_energy)
     batt_size = batt*batt_ctr;
 end
 
+
 %% INITIALIZATION OF PARAMETERS
-%for v_max=5:7
-%for c1=10:15
-%c2=c1;
+%for v_max=9:10 %SENSITIVYTY
+v_max=5; %SENSITIVITY
+
+
+for c1=1:20  %SENSITIVITY
+c2=c1;
 N=250; % number of particles
 t=24; % 24 hours
 dim=n*t; %dimension of a particle in a single row
 price = tou_rates24(t); %Time of Use Rates
-c1=8; %will be change in sensitivity analysis
-c2=8; %will be change in sensitivity analysis
-v_max=5; %will be change in sensitivity analysis
+%c1=10; %will be change in sensitivity analysis
+%c2=10; %will be change in sensitivity analysis
+%v_max=6; %will be change in sensitivity analysis
 validctr=0; %valid schedule counter
 max_iteration=500; %iteration per simulation
-simulations=1;
+simulations=30;
 
 checkd=zeros(1,simulations); %number of appliances with right duration in every simulation
 checki=zeros(1,simulations); %number of appliances with right interruption in every simulation
@@ -187,15 +191,31 @@ for run=1:simulations
 
         %Constructs the matrix of the latest global best
         for a=1:n
+            %Interruption Validity
             on_times=sum(diff([0 solution(a,:)])==1); % count when time-(time-1) = 1, it means 0 to 1
             if (solution(a,1)==1 && solution(a,24)==1 && not(app_dur(a,1)==24))
                 on_times=on_times-1;
-            end
-            if sum(solution(a,:))==sum(app_dur(a,:)) %checking duration validity by sum of the on time and duration time
-                checkd(1,run)=checkd(1,run)+1;
-            end
+            end        
             if on_times==app_usage(a) %checking interruption validity
                 checki(1,run)=checki(1,run)+1;  
+            end   
+            
+            %Duration Validiity
+            if sum(solution(a,:))==sum(app_dur(a,:))%checking duration validity by sum of the on time and duration time
+                d=1; %duration flag
+                for b=1:app_usage(a)
+                    if (app_tB(a,b)<app_tA(a,b)) %to accomodate 4am crossing
+                        on=sum(solution(a,app_tA(a,b):24))+sum(solution(a,1:app_tB(a,b)));
+                    else
+                        on=sum(solution(a,app_tA(a,b):app_tB(a,b)));
+                    end
+                    if on~=app_dur(a,b) %if not equal, 0 duration flag
+                        d=0;
+                    end
+                end
+                if d 
+                    checkd(1,run)=checkd(1,run)+1;
+                end
             end
         end
 
@@ -222,56 +242,63 @@ cost = sum(transpose(appenergy.*price(price_code,:)),1);
 
 %% Plotting
 
-x = linspace(1,24,24);
-total = appenergy;
-batt_op_charging = batt_op;
+% x = linspace(1,24,24);
+% total = appenergy;
+% batt_op_charging = batt_op;
+% 
+% for k=1:24 % Find total consumption from utility
+%     if PV(k,1)>0
+%         total(1,k) = total(1,k)-PV(k,1);
+%     end
+%     if batt_op(1,k) < 0
+%         total(1,k) = total(1,k)+batt_op(1,k);
+%         batt_op_charging(1,k)=0;
+%     end
+%     if total(1,k) <0
+%         total(1,k)=0;
+%     end
+%     
+% end
+% 
+% 
+% 
+% excess = transpose(PV)-appenergy-batt_op_charging;
+% 
+% for k=1:24
+%     if excess(1,k)<0
+%         excess(1,k)=0;
+%     end
+% end
+% 
+% final_cost = sum(transpose(total.*price(price_code,:)),1)-sum(transpose(excess.*price(price_code,:)));
+% 
+% toc;
+% 
+% 
+% t = tiledlayout(3,2);
+% nexttile
+% bar(x,appenergy)
+% title('Total Hourly Energy Usage (BPSO)')
+% nexttile
+% bar(x,batt_op)
+% title('Battery Charge(+)/Discharge(-) Rates')
+% nexttile
+% bar(x,transpose(PV))
+% title('PV Energy Production')
+% nexttile
+% bar(x,excess)
+% title('PV Selling Production')
+% nexttile
+% bar(x,total)
+% title('Total Consumption From Utility')
 
-for k=1:24 % Find total consumption from utility
-    if PV(k,1)>0
-        total(1,k) = total(1,k)-PV(k,1);
-    end
-    if batt_op(1,k) < 0
-        total(1,k) = total(1,k)+batt_op(1,k);
-        batt_op_charging(1,k)=0;
-    end
-    if total(1,k) <0
-        total(1,k)=0;
-    end
-    
+%solution
+%validctr
+%fittest
+
+fprintf('v_max=%d c1,c2=%d\n', v_max, c1)
+fprintf('validctr=%d fittest=%d\n\n', validctr, fittest)
+
 end
+%end
 
-
-
-excess = transpose(PV)-appenergy-batt_op_charging;
-
-for k=1:24
-    if excess(1,k)<0
-        excess(1,k)=0;
-    end
-end
-
-final_cost = sum(transpose(total.*price(price_code,:)),1)-sum(transpose(excess.*price(price_code,:)));
-
-toc;
-
-
-t = tiledlayout(3,2);
-nexttile
-bar(x,appenergy)
-title('Total Hourly Energy Usage (BPSO)')
-nexttile
-bar(x,batt_op)
-title('Battery Charge(+)/Discharge(-) Rates')
-nexttile
-bar(x,transpose(PV))
-title('PV Energy Production')
-nexttile
-bar(x,excess)
-title('PV Selling Production')
-nexttile
-bar(x,total)
-title('Total Consumption From Utility')
-
-solution
-validctr
-fittest

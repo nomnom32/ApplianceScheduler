@@ -10,14 +10,14 @@ P2=0.00728;
 OP=0.00355;
 price_rate=zeros(4,t);
 for a=1:4 %1=M-S(dry),2=M-S(wet),3=Sun(dry),4=Sun(wet)
-for b=1:t
-if ((a==1)&&(b>=8)&&(b<21))||((a==3)&&(b>=18)&&(b<20))
-price_rate(a,b)=P1;
-elseif ((a==2)&&(b>=8)&&(b<21))||((a==4)&&(b>=18)&&(b<20))
-price_rate(a,b)=P2;
-else
-price_rate(a,b)=OP;
-end
-end
+    for b=1:t
+        if ((a==1)&&(b>=5)&&(b<=17))||((a==3)&&(b>=15)&&(b<=16))
+            price_rate(a,b)=P1;
+        elseif ((a==2)&&(b>=5)&&(b<=17))||((a==4)&&(b>=15)&&(b<=16))
+            price_rate(a,b)=P2;
+        else
+            price_rate(a,b)=OP;
+        end
+    end
 end
 end
