@@ -175,10 +175,7 @@ for v_max=v_max_1:v_max_2
                     end
                     
         
-                    %Fitness Function: To be evaluated later.
-                    %Basically, it processes all
-        %             fitness(a,itectr)=objFunc(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu);
-                    %With Battery and EV fitness funcion
+                     %With Battery and EV fitness funcion
                      fitness(a,itectr)=objFunc1(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu, ev_op, batt_op, PV);
                 end
                 
@@ -308,37 +305,6 @@ for v_max=v_max_1:v_max_2
         
         toc
         
-    % %% Plotting
-    % x = linspace(1,24,24);
-    % t = tiledlayout(5,2);
-    % nexttile
-    % bar(x,orig_appenergy)
-    % title('Total  Hourly Energy Usage (Original)')
-    % nexttile
-    % bar(x,[orig_appenergy;orig_ev_op],'stacked')
-    % title('Original App Sched+EV')
-    % nexttile
-    % bar(x,appenergy)
-    % title('Total Hourly Energy Usage (BPSO)')
-    % nexttile
-    % bar(x,[appenergy;ev_op],'stacked')
-    % title('BPSO App Sched+EV')
-    % nexttile
-    % bar(x,batt_op)
-    % title('Battery Charge(+)/Discharge(-) Rates')
-    % nexttile
-    % bar(x,ev_op)
-    % title('EV Charge Rates (BPSO)')
-    % nexttile
-    % bar(x,transpose(PV))
-    % title('PV Energy Production')
-    % nexttile
-    % bar(x,excess)
-    % title('PV Selling Production')
-    % nexttile
-    % bar(x,total)
-    % title('Total Consumption From Utility')
-    
     fprintf('With vmax =%d, constant c1=c2=%d: final cost is %d, fitness is %d, and no. of valid schedules is %d, EV charge = %d ',v_max,c1,final_cost,fittest,validctr,sum(ev_op,2));
     
     
@@ -354,8 +320,3 @@ for v_max=v_max_1:v_max_2
     v= num_of_valids_per_c1c2(1,start_c1:end_c1)
     e = ev_charge_per_c1c2(1,start_c1:end_c1)
 end
-% solution
-% validctr
-% fittest
-% checki
-% checkd
