@@ -110,17 +110,20 @@ orig_cost = sum(transpose(orig_appenergy.*price(price_code,:)),1);
 
 %% INITIALIZATION OF PARAMETERS
 
+for v_max=8:10
 
+for c1=1:20
+c2=21;
 N=250; % number of particles
 t=24; % 24 hours
 dim=n*t; %dimension of a particle in a single row
 price = tou_rates24(t); %Time of Use Rates
-c1=3; %will be change in sensitivity analysis
-c2=3; %will be change in sensitivity analysis
-v_max=6; %will be change in sensitivity analysis
+%c1=3; %will be change in sensitivity analysis
+%c2=3; %will be change in sensitivity analysis
+%v_max=6; %will be change in sensitivity analysis
 validctr=0; %valid schedule counter
 max_iteration=500; %iteration per simulation
-simulations=5;
+simulations=30;
 
 checkd=zeros(1,simulations); %number of appliances with right duration in every simulation
 checki=zeros(1,simulations); %number of appliances with right interruption in every simulation
@@ -171,7 +174,7 @@ for run=1:simulations
             %Basically, it processes all
 %             fitness(a,itectr)=objFunc(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu);
             %With Battery and EV fitness funcion
-             fitness(a,itectr)=objFunc1(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu, ev_op, batt_op, PV);
+             fitness(a,itectr)=objFunc1(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, app_R, user_budget, peak_threshold, mu, ev_op, batt_op, PV);
         end
         
         %Updating Pbest of Each Particle
@@ -299,35 +302,37 @@ final_cost = sum(transpose(total.*price(price_code,:)),1)-sum(transpose(excess.*
 toc
     
 %% Plotting
-x = linspace(1,24,24);
-t = tiledlayout(5,2);
-nexttile
-bar(x,orig_appenergy)
-title('Total  Hourly Energy Usage (Original)')
-nexttile
-bar(x,[orig_appenergy;orig_ev_op],'stacked')
-title('Original App Sched+EV')
-nexttile
-bar(x,appenergy)
-title('Total Hourly Energy Usage (BPSO)')
-nexttile
-bar(x,[appenergy;ev_op],'stacked')
-title('BPSO App Sched+EV')
-nexttile
-bar(x,batt_op)
-title('Battery Charge(+)/Discharge(-) Rates')
-nexttile
-bar(x,ev_op)
-title('EV Charge Rates (BPSO)')
-nexttile
-bar(x,transpose(PV))
-title('PV Energy Production')
-nexttile
-bar(x,excess)
-title('PV Selling Production')
-nexttile
-bar(x,total)
-title('Total Consumption From Utility')
+% x = linspace(1,24,24);
+% t = tiledlayout(5,2);
+% nexttile
+% bar(x,orig_appenergy)
+% title('Total  Hourly Energy Usage (Original)')
+% nexttile
+% bar(x,[orig_appenergy;orig_ev_op],'stacked')
+% title('Original App Sched+EV')
+% nexttile
+% bar(x,appenergy)
+% title('Total Hourly Energy Usage (BPSO)')
+% nexttile
+% bar(x,[appenergy;ev_op],'stacked')
+% title('BPSO App Sched+EV')
+% nexttile
+% bar(x,batt_op)
+% title('Battery Charge(+)/Discharge(-) Rates')
+% nexttile
+% bar(x,ev_op)
+% title('EV Charge Rates (BPSO)')
+% nexttile
+% bar(x,transpose(PV))
+% title('PV Energy Production')
+% nexttile
+% bar(x,excess)
+% title('PV Selling Production')
+% nexttile
+% bar(x,total)
+% title('Total Consumption From Utility')
 
 fprintf('With no. of simulations = %d: final cost is %d, fitness is %d, and no. of valid schedules is %d, EV charge = %d ',simulations,final_cost,fittest,validctr,sum(ev_op,2));
-    
+
+end
+end

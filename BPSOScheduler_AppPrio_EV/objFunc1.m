@@ -1,4 +1,4 @@
-function OF = objFunc(n, t, sched, price, usage, tw, dur, tA, tB, budget, peak, mu, ev_op, batt_op, PV)
+function OF = objFunc(n, t, sched, price, usage, tw, duration, tA, tB, pR, budget, peak, mu, ev_op, batt_op, PV)
 
 
 % n = number of appliances
@@ -139,7 +139,7 @@ TI=0;
 for a=1:n
     on_times=sum(diff([0 sched(a,:)])==1);
     %to accomodate 4am crossing
-    if (sched(a,1)==1 && sched(a,24)==1 && not(dur(a,1)==24))
+    if (sched(a,1)==1 && sched(a,24)==1 && not(duration(a,1)==24))
         on_times=on_times-1;
     end
     I=abs(on_times-usage(a));
@@ -158,7 +158,7 @@ for a=1:n
             on=sum(sched(a,tA(a,b):tB(a,b)));
         end
         on_tot=on_tot+on;
-        D=D+abs((on-dur(a,b)));
+        D=D+abs((on-duration(a,b)));
     end
     d_excess=abs(sum(sched(a,:))-on_tot);
     TD=TD+D+d_excess;
