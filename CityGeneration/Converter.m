@@ -7,28 +7,30 @@ format long g
 probability_data
 
 % DATA PROCESSING
-fileID = fopen('userinput.m','w');
+consumption_matrix = zeros(20,24);
+for output_file_name = 1:5 %modift to 1:3 if needed then run multiple times
+
+filename = sprintf('%s%d.m','userinput',output_file_name);
+fileID = fopen(filename,'w');
 plot = zeros(1,24);
-for identifier = 1:100
+start_identifier = 1 + (output_file_name-1)*700;
+end_identifier = 700 + (output_file_name-1)*700;
+for identifier = start_identifier:end_identifier
 
 pd = makedist('PiecewiseLinear', 'x', [1 2 3 4 5], 'Fx', [0 0.0777 0.376 0.7328 1]);
 Household_size = fix(random(pd));
 
 if Household_size ==1
-final(AO1,AU1,ST1,D1,PR1,ETF1)
-apps=ans;
+apps=final(AO1,AU1,ST1,D1,PR1,ETF1);
 
 elseif Household_size ==2
-final(AO2,AU2,ST2,D2,PR2,ETF2)
-apps=ans;
+apps=final(AO2,AU2,ST2,D2,PR2,ETF2);
 
 elseif Household_size ==3
-final(AO3,AU3,ST3,D3,PR3,ETF3)
-apps=ans;
+apps=final(AO3,AU3,ST3,D3,PR3,ETF3);
 
 elseif Household_size ==4
-final(AO4,AU4,ST4,D4,PR4,ETF4)
-apps=ans;
+apps=final(AO4,AU4,ST4,D4,PR4,ETF4);
 
 end
 
@@ -180,19 +182,20 @@ fprintf(fileID,'99 %d %d 0 0 0\n',EV_possess, EV_charge);
 fprintf(fileID,'100 %d 0 0 0 0];\n\n',SP_num);
 
 
-
-
 end
 
 %plotting continued
 %once multiple files are needed I will need to save the plot variable
 %elsewhere then rerun the code then re-add
-plot
+figure(output_file_name);
+plot;
+consumption_matrix(output_file_name,:) = plot;
 bar(plot)
 xlabel('Hours of the days');
 ylabel('kWh');
-title(['Total Energy Consumption'])
+title(['Total Energy Consumption of ', filename])
 
+end
 toc
 
 

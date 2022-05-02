@@ -58,11 +58,11 @@ end
 col6_template;%rankings of similar appliances will be the same regardless of time frame
 
 %------------------------------------------------------------------------------------
-col1 = [];
-col3 = [];
-col4 = [];
-col5 = [];
-col6 = [];
+col1 = []; %app code index
+col3 = []; %start time
+col4 = []; %duration
+col5 = []; %endtime
+col6 = []; %prio rank
 %loop tayo sa ownership
 for z = 1:size(MCA_AO,2)
     %ensure na non-zero ~you own this appliance
@@ -130,14 +130,15 @@ for z = 1:size(MCA_AO,2)
             %nag add ako ng extra sa dulo para masubtract yung Last sa 1st
             %element while preserving the "time element" kaya may
             %[24+start] - end
-            difference = [diff(col3_revised),24-col3_revised(end)+col3_revised(1,1)];46
+            difference = [diff(col3_revised),24-col3_revised(end)+col3_revised(1,1)];
             col4_temp = [];
 
             %we check if multiple entries ba kasi if hindi wala namang
             %conflict dapat sa duration :)
             %multiple entries mean na 2 usages in a day so need na di
             %continuous iyon
-            if size(difference,2)>1 %check mult entries
+            if size(difference,2) > 1 %check mult entries
+            %fprintf('here\n');
             for x = 1:size(difference,2)
                 %for every start time generate a duration
                 data = [0,D(z,:)];
@@ -200,21 +201,44 @@ for z = 1:size(MCA_AO,2)
             end
             else
                 data = [0,D(z,:)];
+                %fprintf('now\n');
                 %debug for data na all zeroes lang laman
                 if data == zeros(size(data))
-                data(end) = 1;
+                    data(end) = 1;
                 end
                 a = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25];
                 pd = makedist('PiecewiseLinear', 'x', [a], 'Fx', [data]);
-                num = fix(random(pd));
+                %num = fix(random(pd));
                 col4_temp = [col4_temp,num];
-
+                
+                data = [0,ETF(z,:)];
+                %debug for zero endings
+                data(end) = 1;
+                %Edited out code below because of +1 ETF request by
+                %Rain
+                %a = [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24];
+                a = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25];
+                pd = makedist('PiecewiseLinear', 'x', [a], 'Fx', [data]);
+                %num_2 = fix(random(pd));
+                
+                num = 5;
+                col3_revised = 20;
+                num_2 = 2;
+                
                 if num == 24
-                    endtime = 0; %kasi pag 24 hour run time dapat 24-24 siya
-                else 
-                    endtime = -1; %eto ay para maset yung mga solo appliances to 23 hours lang ang usage
+                    endtime = col3_revised; 
+                else
+                    if (col3_revised + num + num_2 <= 24)
+                        endtime = col3_revised + num + num_2;
+                    else 
+                        endtime = col3_revised + num + num_2 - 24;
+                        if (endtime > col3_revised)
+                            endtime = col3_revised;
+                        end 
+                    end
                 end
-                endtime = col3_revised + endtime;
+                %endtime = col3_revised + endtime;
+                %endtime = col3_revised + num + num_2;
                 col5 = [col5,endtime];
                 
             end
@@ -254,13 +278,11 @@ col2;
 apps_try = transpose([col1;col2;col4;col3;col5;col6]); %return the appliance matrix
 
 
-%set the reser time of the day
+%set the reset time of the day
 cut_off = 4;
 for x = 1:size(apps_try,1)
     if apps_try(x,4) < cut_off
         apps_try(x,4) = apps_try(x,4) - cut_off + 1 + 24;
-    elseif apps_try(x,4) == cut_off - 1
-        apps_try(x,4) = 24;
     else
         apps_try(x,4) = apps_try(x,4) - cut_off + 1;
     end
@@ -272,6 +294,13 @@ for x = 1:size(apps_try,1)
     else
         apps_try(x,5) = apps_try(x,5) - cut_off;
     end
+    %print st=1 and et=24 for 24 hour timeframes
+    if (apps_try(x,4) > apps_try(x,5))
+        if ((24-apps_try(x,4)+1)+apps_try(x,5)==24)
+            apps_try(x,4)=1;
+            apps_try(x,5)=24;
+        end
+    end    
 end
 
 apps = apps_try;
