@@ -208,7 +208,7 @@ for z = 1:size(MCA_AO,2)
                 end
                 a = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25];
                 pd = makedist('PiecewiseLinear', 'x', [a], 'Fx', [data]);
-                %num = fix(random(pd));
+                num = fix(random(pd));
                 col4_temp = [col4_temp,num];
                 
                 data = [0,ETF(z,:)];
@@ -219,11 +219,7 @@ for z = 1:size(MCA_AO,2)
                 %a = [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24];
                 a = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25];
                 pd = makedist('PiecewiseLinear', 'x', [a], 'Fx', [data]);
-                %num_2 = fix(random(pd));
-                
-                num = 5;
-                col3_revised = 20;
-                num_2 = 2;
+                num_2 = fix(random(pd));
                 
                 if num == 24
                     endtime = col3_revised; 
