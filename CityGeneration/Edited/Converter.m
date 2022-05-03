@@ -8,7 +8,7 @@ probability_data
 
 % DATA PROCESSING
 consumption_matrix = zeros(20,24);
-for output_file_name = 1:5 %modift to 1:3 if needed then run multiple times
+for output_file_name = 1:1 %modift to 1:3 if needed then run multiple times
 
 filename = sprintf('%s%d.m','userinput',output_file_name);
 fileID = fopen(filename,'w');

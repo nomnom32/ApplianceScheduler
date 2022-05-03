@@ -142,14 +142,14 @@ for z = 1:size(MCA_AO,2)
             for x = 1:size(difference,2)
                 %for every start time generate a duration
                 data = [0,D(z,:)];
-                data = [0,diff(data)];
+                %data = [0,diff(data)];
                 a = [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25];
                 
                 %shortcut na kung 2 hours ang difference automatic 1 dapat agad ang
                 %duration [15,17] 15-16 = 1 hour
                 if difference(1,x) == 2
                     col4_temp = [col4_temp,1];
-                    col5 = [col5,col3(1,x)+1];
+                    col5 = [col5,col3_revised(1,x)+1];
                 else
                     %eto yung portion na magkakaltas tas gagawan ng new
                     %probabilities para bumilis ang code
@@ -157,17 +157,20 @@ for z = 1:size(MCA_AO,2)
                     %converting the main data from cumulative into non
                     %cumulative probabilities
                     data = data(1:difference(1,x));
-                    data_sum = sum(data(:));
+                    %datadiff = diff(data);
+                    data_sum = data(end);
                     if data_sum == 0
                         data_sum = 1;
                         data(end) = 1;
                     end
                     %reversion to cumulative 
-                    data = cumsum(data);
+                    %data = cumsum(data);
                     %recalibrating the probabilities of data kasi gusto
                     %naming kaltasin yung duration
                     data = data/data_sum;
                     a = a(1:difference(1,x));
+                    %size(data) 
+                    %size(a);
                     pd = makedist('PiecewiseLinear', 'x', [a], 'Fx', [data]);
                     num = fix(random(pd));
                     col4_temp = [col4_temp,num];
@@ -185,13 +188,25 @@ for z = 1:size(MCA_AO,2)
                     pd = makedist('PiecewiseLinear', 'x', [a], 'Fx', [data]);
                     num_2 = fix(random(pd));
                     %end = start + duration + extra time frame
-                    endtime = col3_revised(1,x) + num + num_2;
-                    %if lumampas edi set at max
-                    if endtime >= (col3_revised(1,x) + difference(1,x) -1)
-                        endtime = col3_revised(1,x) + difference(1,x) -1;
-                    end
+                    %endtime = col3_revised(1,x) + num + num_2;
+                    %if lumampas edi set at max            
+                    %if endtime > (col3_revised(1,x) + difference(1,x) -1)
+                    %    endtime = col3_revised(1,x) + difference(1,x) -1;
+                    %end
                     %if lumampas sa 24, modulo para bumalik
-                    endtime = mod(endtime,24);
+                    %endtime = mod(endtime,24);
+                    %if endtime == 0
+                    %    endtime = 24;
+                    %end
+                    
+                    if (num + num_2 <= difference(1,x)-1)
+                        endtime = col3_revised(1,x) + num + num_2;
+                    else
+                        endtime = col3_revised(1,x) + difference(1,x) - 1;
+                    end
+                    if endtime > 24
+                        endtime = mod(endtime,24);
+                    end
                     if endtime == 0
                         endtime = 24;
                     end
