@@ -3,7 +3,7 @@ userinput1
 
 city_orig_appenergy=zeros(1,24); %Original Load Profile with no BPSO, no PV and Battery
 city_orig_ev_op=zeros(1,24); %Original EV operation 
-city_orig_ev_op_withPVandBatt; %Original
+%city_orig_ev_op_withPVandBatt; %Original
 city_bpso_appenergy=zeros(1,24); %BPSO Schedule with PV and Battery
 city_bpso_evop=zeros(1,24); %BPSO EV Operation
 city_batt_op=zeros(1,24); %Battery Operation
@@ -11,11 +11,11 @@ city_PV=zeros(1,24); %PV Operation
 city_excess=zeros(1,24); %Excess from PV and Battery
 city_total=zeros(1,24); %Total Consumption from Utility
 
-for z=1:100
+for z=1:10
     tic
     data = eval(sprintf('H%d',z));
-    fprintf('H%d',z)
-    fprintf('\n')
+    fprintf('H%d\n',z)
+    %fprintf('\n')
     %% IMPORT INPUT DATA
     price_code=1;%1=M-S(dry),2=M-S(wet),3=Sun(dry),4=Sun(wet)
     price = tou_rates24(24); %Time of Use Rates
@@ -24,7 +24,7 @@ for z=1:100
     [row_len,col_len]=size(data);
     peak_threshold=data(1,4);
     total_energy=data(1,5);
-    user_budget=data(1,6);  
+    user_budget=data(1,6);
     
     % Counts the number of type of appliances
     n=0;
@@ -125,22 +125,23 @@ for z=1:100
     t=24; % 24 hours
     dim=n*t; %dimension of a particle in a single row
     price = tou_rates24(t); %Time of Use Rates
-    c1=3; %will be change in sensitivity analysis
-    c2=3; %will be change in sensitivity analysis
+    c1=4; %will be change in sensitivity analysis
+    c2=4; %will be change in sensitivity analysis
     v_max=6; %will be change in sensitivity analysis
     validctr=0; %valid schedule counter
     max_iteration=500; %iteration per simulation
     
     simulations=5;
-    
-    checkd=zeros(1,simulations); %number of appliances with right duration in every simulation
-    checki=zeros(1,simulations); %number of appliances with right interruption in every simulation
-    minfit_per_ite=zeros(max_iteration,simulations); %minimum fitness per iteration
-    sol_per_run=zeros(simulations,dim);
+    max_simulations=30;
+    checkd=zeros(1,max_simulations); %number of appliances with right duration in every simulation
+    checki=zeros(1,max_simulations); %number of appliances with right interruption in every simulation
+    minfit_per_ite=zeros(max_iteration,max_simulations); %minimum fitness per iteration
+    sol_per_run=zeros(max_simulations,dim);
     
     
     %% BPSO SIMULATIONS
-    for run=1:simulations
+    for run=1:max_simulations
+           
         itectr=0;
     
         %Allocations
@@ -242,21 +243,25 @@ for z=1:100
     
             %Duration Validity
             if sum(solution(a,:))==sum(app_dur(a,:)) %checking duration validity by sum of the on time and duration time
-                d=1; %duration flag
-                for b=1:app_usage(a)
-                    if (app_tB(a,b)<app_tA(a,b)) %to accomodate 4am crossing
-                        on=sum(solution(a,app_tA(a,b):24))+sum(solution(a,1:app_tB(a,b)));
-                    else
-                        on=sum(solution(a,app_tA(a,b):app_tB(a,b)));
-                    end
-                    if on~=app_dur(a,b) %if not equal, 0 duration flag
-                            d=0;
-                    end
-                end
-                if d %checking duration validity by sum of the on time and duration time
-                    checkd(1,run)=checkd(1,run)+1;
-                end
+               d=1; %duration flag
+               for b=1:app_usage(a)
+                   if (app_tB(a,b)<app_tA(a,b)) %to accomodate 4am crossing
+                       on=sum(solution(a,app_tA(a,b):24))+sum(solution(a,1:app_tB(a,b)));
+                   else
+                       on=sum(solution(a,app_tA(a,b):app_tB(a,b)));
+                   end
+                   if on~=app_dur(a,b) %if not equal, 0 duration flag
+                           d=0;
+                   end
+               end
+               if d %checking duration validity by sum of the on time and duration time
+                   checkd(1,run)=checkd(1,run)+1;
+               end
             end
+            
+%             if sum(solution(a,:))==sum(app_dur(a,:)) %checking duration validity
+%                checkd(1,run)=checkd(1,run)+1;
+%             end
             
             if on_times==app_usage(a) %checking interruption validity
                 checki(1,run)=checki(1,run)+1;  
@@ -269,14 +274,26 @@ for z=1:100
         end 
         % prints fittest solution
         % note: sometimes fittest solution is not valid
-    
+        fprintf('validctr=%d, run=%d\n', validctr, run)
+        if (run>=simulations && validctr>0)
+            break
+        end
+        %num_of_runs=run;  
     end
     
     %% Final Solution
+    
+    checkd=checkd(:,1:run); %number of appliances with right duration in every simulation
+    checki=checki(:,1:run); %number of appliances with right interruption in every simulation
+    minfit_per_ite=minfit_per_ite(:,1:run); %minimum fitness per iteration
+    sol_per_run=sol_per_run(1:run,:);
+    
     [fittest, fittest_index]=min(minfit_per_ite(max_iteration,:)); % check minimum fitness for every run
     for a=1:n
         solution(a,:)=sol_per_run(fittest_index,(a-1)*t+1:a*t);
     end 
+    
+    fprintf('fitness=%d\n', fittest);
     
     tempvar = solution.*app_TW; % wattage per app-time slot
     appenergy = sum(tempvar,1); % wattage per time slot
@@ -309,10 +326,11 @@ for z=1:100
     final_cost = sum(transpose(total.*price(price_code,:)),1)-sum(transpose(excess.*price(price_code,:))); %computation of final cost for conumer
     
     toc
+    fprintf('\n');
 
 end
 
-
+%fprintf('validctr=%d, fitness=%d, number_of_runs=%d', validctr, fittest, run);
 
 % %% Plotting
 % x = linspace(1,24,24);
