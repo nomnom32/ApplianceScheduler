@@ -1,5 +1,5 @@
 clear
-userinput4
+userinput8
 % import userinput file containing 700 households
 
 city_bpso_appenergy=zeros(1,24); %BPSO Schedule Appliance Only
@@ -14,7 +14,7 @@ num_of_invalid = 0; %No. of Invalid Schedules
 city_satisfaction=0; %sum of average satisfaction of each household
 %city_invalid_house = []; %array of house numbers that produced invalid schedules
 
-for z=1:100 %edit this for part by part simulation
+for z=5201:5300 %edit this for part by part simulation
     tic
     data = eval(sprintf('H%d',z));
     %fprintf('H%d\n',z)
@@ -334,9 +334,17 @@ for z=1:100 %edit this for part by part simulation
         end
     end
     
+    
     final_cost = sum(transpose(total.*price(price_code,:)),1)-sum(transpose(excess.*price(price_code,:))); %computation of final cost for conumer
     
-    toc
+%     apponly_cost = sum(transpose(appenergy.*price(price_code,:)),1);
+%     ev_cost = sum(transpose(ev_op.*price(price_code,:)),1);
+%     batt_cost = sum(transpose(batt_op.*price(price_code,:)),1);
+%     pv_cost = sum(transpose(transpose(PV).*price(price_code,:)),1);
+%     excess_cost = sum(transpose(excess.*price(price_code,:)));
+    
+    
+    %toc;
     %fprintf('\n');
 
     city_bpso_appenergy=city_bpso_appenergy+appenergy; %BPSO Schedule Appliance Only
@@ -347,8 +355,18 @@ for z=1:100 %edit this for part by part simulation
     city_excess=city_excess+excess; %Excess from PV and Battery
     city_total=city_total+total; %Total Consumption from Utility
     city_cost=city_cost+final_cost; %Total Cost
+    
+    
    
 end
+
+city_apponly_cost=sum(transpose(city_bpso_appenergy.*price(price_code,:)),1);
+city_appwithev_cost=sum(transpose(city_bpso_appenergy_withevop.*price(price_code,:)),1);
+city_ev_cost=sum(transpose(city_bpso_evop.*price(price_code,:)),1);
+city_ess_cost=sum(transpose(city_batt_op.*price(price_code,:)),1);
+city_pv_cost=sum(transpose(city_PV.*price(price_code,:)),1);
+city_excess_cost=sum(transpose(city_excess.*price(price_code,:)),1);
+
 fprintf('\n');
 fprintf('No of Invalid Schedules:%d and Total Cost:%d \n',num_of_invalid,city_cost);
 
