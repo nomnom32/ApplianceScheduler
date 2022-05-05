@@ -1,20 +1,23 @@
 clear
-userinput1
+userinput4
+% import userinput file containing 700 households
 
-city_orig_appenergy=zeros(1,24); %Original Load Profile with no BPSO, no PV and Battery
-city_orig_ev_op=zeros(1,24); %Original EV operation 
-%city_orig_ev_op_withPVandBatt; %Original
-city_bpso_appenergy=zeros(1,24); %BPSO Schedule with PV and Battery
+city_bpso_appenergy=zeros(1,24); %BPSO Schedule Appliance Only
+city_bpso_appenergy_withevop=zeros(1,24); %BPSO Schedule Appliance + EV
 city_bpso_evop=zeros(1,24); %BPSO EV Operation
 city_batt_op=zeros(1,24); %Battery Operation
 city_PV=zeros(1,24); %PV Operation
 city_excess=zeros(1,24); %Excess from PV and Battery
 city_total=zeros(1,24); %Total Consumption from Utility
+city_cost=0; %City Total Cost
+num_of_invalid = 0; %No. of Invalid Schedules
+city_satisfaction=0; %sum of average satisfaction of each household
+%city_invalid_house = []; %array of house numbers that produced invalid schedules
 
-for z=1:10
+for z=1:100 %edit this for part by part simulation
     tic
     data = eval(sprintf('H%d',z));
-    fprintf('H%d\n',z)
+    %fprintf('H%d\n',z)
     %fprintf('\n')
     %% IMPORT INPUT DATA
     price_code=1;%1=M-S(dry),2=M-S(wet),3=Sun(dry),4=Sun(wet)
@@ -132,7 +135,7 @@ for z=1:10
     max_iteration=500; %iteration per simulation
     
     simulations=5;
-    max_simulations=30;
+    max_simulations=20;
     checkd=zeros(1,max_simulations); %number of appliances with right duration in every simulation
     checki=zeros(1,max_simulations); %number of appliances with right interruption in every simulation
     minfit_per_ite=zeros(max_iteration,max_simulations); %minimum fitness per iteration
@@ -148,6 +151,7 @@ for z=1:10
         sig=zeros(N,dim); %particle x appliance*time  250 rows X 24*n column
         solution=zeros(n,t); %solution
         fitness=zeros(N,1); % fitness
+        satisfaction=0;
         pbest=ones(N,dim); % personal best same size with sig
         gbest=ones(1,dim); % global best, only 1 solution
         pbest_fitness=ones(N,1); %fitness per particle
@@ -183,7 +187,7 @@ for z=1:10
                 %Basically, it processes all
     %             fitness(a,itectr)=objFunc(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu);
                 %With Battery and EV fitness funcion
-                 fitness(a,itectr)=objFunc1(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu, ev_op, batt_op, PV,app_R);
+                 [fitness(a,itectr),satisfaction]=objFunc1(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu, ev_op, batt_op, PV,app_R);
             end
             
             %Updating Pbest of Each Particle
@@ -259,10 +263,6 @@ for z=1:10
                end
             end
             
-%             if sum(solution(a,:))==sum(app_dur(a,:)) %checking duration validity
-%                checkd(1,run)=checkd(1,run)+1;
-%             end
-            
             if on_times==app_usage(a) %checking interruption validity
                 checki(1,run)=checki(1,run)+1;  
             end
@@ -274,13 +274,17 @@ for z=1:10
         end 
         % prints fittest solution
         % note: sometimes fittest solution is not valid
-        fprintf('validctr=%d, run=%d\n', validctr, run)
+        %fprintf('validctr=%d, run=%d\n', validctr, run)
         if (run>=simulations && validctr>0)
             break
         end
         %num_of_runs=run;  
     end
     
+    if validctr==0
+        num_of_invalid = num_of_invalid +1;
+        fprintf('H%d is invalid \n',z)
+    end
     %% Final Solution
     
     checkd=checkd(:,1:run); %number of appliances with right duration in every simulation
@@ -289,11 +293,18 @@ for z=1:10
     sol_per_run=sol_per_run(1:run,:);
     
     [fittest, fittest_index]=min(minfit_per_ite(max_iteration,:)); % check minimum fitness for every run
+    
     for a=1:n
         solution(a,:)=sol_per_run(fittest_index,(a-1)*t+1:a*t);
     end 
     
-    fprintf('fitness=%d\n', fittest);
+    [OBJ,satisfaction]=objFunc1(n, t, solution, price(price_code,:), app_usage, app_TW, app_dur, app_tA, app_tB, user_budget, peak_threshold, mu, ev_op, batt_op, PV,app_R);
+    
+    city_satisfaction=city_satisfaction+satisfaction;
+    
+    %fprintf('satisfaction=%d\n', satisfaction);
+    
+    %fprintf('fitness=%d\n', fittest);
     
     tempvar = solution.*app_TW; % wattage per app-time slot
     appenergy = sum(tempvar,1); % wattage per time slot
@@ -326,40 +337,41 @@ for z=1:10
     final_cost = sum(transpose(total.*price(price_code,:)),1)-sum(transpose(excess.*price(price_code,:))); %computation of final cost for conumer
     
     toc
-    fprintf('\n');
+    %fprintf('\n');
 
+    city_bpso_appenergy=city_bpso_appenergy+appenergy; %BPSO Schedule Appliance Only
+    city_bpso_appenergy_withevop=city_bpso_appenergy_withevop+appenergy+ev_op; %BPSO Schedule Appliance + EV
+    city_bpso_evop=city_bpso_evop+ev_op; %BPSO EV Operation
+    city_batt_op=city_batt_op+batt_op; %Battery Operation
+    city_PV=city_PV+transpose(PV); %PV Operation
+    city_excess=city_excess+excess; %Excess from PV and Battery
+    city_total=city_total+total; %Total Consumption from Utility
+    city_cost=city_cost+final_cost; %Total Cost
+   
 end
+fprintf('\n');
+fprintf('No of Invalid Schedules:%d and Total Cost:%d \n',num_of_invalid,city_cost);
 
-%fprintf('validctr=%d, fitness=%d, number_of_runs=%d', validctr, fittest, run);
-
-% %% Plotting
+%% Plotting
 % x = linspace(1,24,24);
-% t = tiledlayout(5,2);
-% nexttile
-% bar(x,orig_appenergy)
+% t = tiledlayout(4,2);nexttile
+% bar(x,city_bpso_appenergy)
 % title('Total  Hourly Energy Usage (Original)')
 % nexttile
-% bar(x,[orig_appenergy;orig_ev_op],'stacked')
+% bar(x,[city_bpso_appenergy;city_bpso_evop],'stacked')
 % title('Original App Sched+EV')
 % nexttile
-% bar(x,appenergy)
-% title('Total Hourly Energy Usage (BPSO)')
-% nexttile
-% bar(x,[appenergy;ev_op],'stacked')
-% title('BPSO App Sched+EV')
-% nexttile
-% bar(x,batt_op)
+% bar(x,city_batt_op)
 % title('Battery Charge(+)/Discharge(-) Rates')
 % nexttile
-% bar(x,ev_op)
+% bar(x,city_bpso_evop)
 % title('EV Charge Rates (BPSO)')
 % nexttile
-% bar(x,transpose(PV))
+% bar(x,city_PV)
 % title('PV Energy Production')
 % nexttile
-% bar(x,excess)
+% bar(x,city_excess)
 % title('PV Selling Production')
 % nexttile
-% bar(x,total)
+% bar(x,city_total)
 % title('Total Consumption From Utility')
-

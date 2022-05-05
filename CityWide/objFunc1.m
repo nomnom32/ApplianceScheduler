@@ -1,4 +1,4 @@
-function OF = objFunc(n, t, sched, price, usage, tw, dur, tA, tB, budget, peak, mu, ev_op, batt_op, PV,pR)
+function [OF,satisfaction] = objFunc(n, t, sched, price, usage, tw, dur, tA, tB, budget, peak, mu, ev_op, batt_op, PV,pR)
 
 
 % n = number of appliances
@@ -18,6 +18,8 @@ P_dissat=1;
 P_bud=1;
 P_int=1;
 P_dur=1;
+S_tot=0;
+S_net=0;
 
 %normalizing factors
 Mbp = 10; %budget penalty multiplier
@@ -129,9 +131,11 @@ for a=1:n % do for all n appliances
     S_ave=S/usage(a); %obtaining average satisfaction
     end
 TDS=TDS+(1-S_ave)+out_of_bounds; %total dissatisfaction
+S_tot=S_tot+S_ave;
 end
 
 TDS=TDS*P_dissat*1*Mtds;
+S_net=S_tot/n;
 
 %% Interruption Penalty
 % on_times vs number of usage
@@ -166,4 +170,5 @@ end
 TD=TD*P_dur*Mdur;
 %% Objective Function value
 OF = TI+TD+TDS+BP+EC+OP;
+satisfaction = S_net;
 end
