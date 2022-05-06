@@ -1,5 +1,5 @@
 clear
-userinput8
+userinput9
 % import userinput file containing 700 households
 
 city_bpso_appenergy=zeros(1,24); %BPSO Schedule Appliance Only
@@ -12,12 +12,15 @@ city_total=zeros(1,24); %Total Consumption from Utility
 city_cost=0; %City Total Cost
 num_of_invalid = 0; %No. of Invalid Schedules
 city_satisfaction=0; %sum of average satisfaction of each household
-%city_invalid_house = []; %array of house numbers that produced invalid schedules
+city_invalid_house = strings([1,100]); %array of house numbers that produced invalid schedules (specifically for 100 HH run
+inv_ctr=0; %invalid counter
 
-for z=5201:5300 %edit this for part by part simulation
-    tic
+tic;
+
+for z=6001:6100 %edit this for part by part simulation
+    %tic
     data = eval(sprintf('H%d',z));
-    %fprintf('H%d\n',z)
+    fprintf('H%d\n',z)
     %fprintf('\n')
     %% IMPORT INPUT DATA
     price_code=1;%1=M-S(dry),2=M-S(wet),3=Sun(dry),4=Sun(wet)
@@ -144,7 +147,7 @@ for z=5201:5300 %edit this for part by part simulation
     
     %% BPSO SIMULATIONS
     for run=1:max_simulations
-           
+        %tic;
         itectr=0;
     
         %Allocations
@@ -279,11 +282,14 @@ for z=5201:5300 %edit this for part by part simulation
             break
         end
         %num_of_runs=run;  
+        %toc
     end
     
     if validctr==0
         num_of_invalid = num_of_invalid +1;
         fprintf('H%d is invalid \n',z)
+        inv_ctr=inv_ctr+1;
+        city_invalid_house(1,inv_ctr)=sprintf("H%d",z);    
     end
     %% Final Solution
     
@@ -366,9 +372,12 @@ city_ev_cost=sum(transpose(city_bpso_evop.*price(price_code,:)),1);
 city_ess_cost=sum(transpose(city_batt_op.*price(price_code,:)),1);
 city_pv_cost=sum(transpose(city_PV.*price(price_code,:)),1);
 city_excess_cost=sum(transpose(city_excess.*price(price_code,:)),1);
+city_invalid_house=city_invalid_house(1,1:num_of_invalid);
 
 fprintf('\n');
 fprintf('No of Invalid Schedules:%d and Total Cost:%d \n',num_of_invalid,city_cost);
+
+toc;
 
 %% Plotting
 % x = linspace(1,24,24);
