@@ -32,11 +32,10 @@ final.m:
 - function found in Converter.m that generates the Appliance matrix of every household which contain the relevant factors such as
 - Appliance Ownership, Usage, Duration, Start time, End time, Appliance Priority
 
-CitywithEV.m
-- generates the total energy demand of the user input across 24 hours while considering electric vehicle usage
-
 CitywithEVPVESS.m
-- generates the total energy demand of the user input across 24 hours while considering electric vehicle usage, solar power, and energy storage system usage.
+- generates the total energy demand of the user input across 24 hours while considering electric vehicle usage, solar power, and energy storage system usage in different combinations
+- the combinations are as follows:
+- EV only, PV only, ESS only, Appliances only (no EV, no PV, no ESS), EV + Appliances, EV + PV + ESS + Appliances
 
 %% USER INPUTS
 - contains the raw appliance matrices of the household from Household 1-14061 separated into 20 files
