@@ -1,4 +1,4 @@
-%DATAINPUTS
+%DATAINPUTS from processed survey data
 
 AO1 = [0.07	0.14	0.21	0.50	0.71	1.00
 0.71	1.00	1.00	1.00	1.00	1.00
