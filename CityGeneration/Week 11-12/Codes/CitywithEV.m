@@ -137,13 +137,6 @@ finalcost_orig_value = finalcost_orig_value + final_cost_orig;
 finalcost_orig_and_ev_value = finalcost_orig_and_ev_value + final_cost_orig_and_EV; 
 finalcost_ev_value = finalcost_ev_value + final_cost_ev;
 
-%unused code below
-%fprintf('final cost %d = %.2f \n',houses, final_cost)
-%fprintf('\nEV initial Charge = %d \n',ev_int_ch);
-%name = sprintf('original schedule %d:',houses);
-%disp(name)
-%disp(orig_sched)
-
 
 end
 %EV_operation
