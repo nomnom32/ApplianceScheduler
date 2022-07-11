@@ -112,8 +112,6 @@ end
 
 PV=PV*solar_own;
 
-%ito yung PV only na need ko
-
 
 % counts number of usage per appliance
 app_usage=zeros(n,1);
@@ -260,7 +258,6 @@ PV_operation(iteration,:) = [holder_pv,cost_holder_pv];
 ESS_operation(iteration,:) = [holder_ess,cost_holder_ess];
 Excess_operation(iteration,:) = [holder_excess,cost_holder_excess];
 
-%7 final costs nalang ang kulang
 
 %Reintialize placeholders
 holder_city_EV_PV_ESS = 0;
