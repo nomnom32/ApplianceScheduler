@@ -40,11 +40,9 @@ apps=final(AO4,AU4,ST4,D4,PR4,ETF4);
 end
 
 %-----------------------------------------
-%these are the probabilities na wala per household size [dahil sa makedist
-%function]
 ESS = [7.14 6.67 9.05 19.86];
 EV = [28.57 22.67 21.11 22.6];
-%probs na based on household size (by row) and number (by column)
+%probabilities based on household size (by row) and number (by column)
 SP = [16.67 41.67 16.67 25
       26.23 13.11 39.34 21.31
       22.929 8.9171 33.757 34.394
@@ -75,9 +73,6 @@ SP_num = fix(random(pd));
 
 %-----------------------------------------------------------
 %Peak Threshold Portion
-%TW is yet to be updated
-
-%TW = transpose([16.7 70 38.66 57.99 220.75 207.25 70.11 361.14 141.4 60 276 26.5 7.8 320 166 47.3 576.7 10 23.23 150 8.5 152 20 333.7 1.1 412.2 3 25 30.2 596.8 302.9 185 1500 80.8 1500 10.3 30.2 1500 24 504.5 660 440 4.9 105.5 26.8 120 35 150 75 10 361.14 1200]);
 %52 total appliances and 24 hours in a day
 schedule = zeros(52,24);
 kWh = zeros(52,24);
@@ -107,26 +102,10 @@ store = sum(kWh);
 plot = store + plot;
 
 %--------------------------------------------------------------
-%Writing on a .m file
-
-%fprintf(fileID,'%%Household \n');
-%fprintf(fileID,'%d\n',identifier);
-
-%fprintf(fileID,'%%Household size: \n');
-%fprintf(fileID,'%d\n',Household_size);
-
-
-%threshold = 1200; %fixed threshold
-%fprintf(fileID,'%% 80%% Peak Threshold \n');
-%fprintf(fileID,'%.2f\n',threshold);
-
-
-%fprintf(fileID,'%%Total Wattage: \n');
-%--------------------------------------------------------------
 %total wattage as sum product of TW and Duration
 total_wattage = sum(apps(:,2).*apps(:,3));
 
-%Setting the budget (needs to be after schedule generation)
+%Setting the budget
 if Household_size ==1
 budget = (0.2705*total_wattage-119.83)/30;
 
@@ -141,35 +120,6 @@ budget = (0.2459*total_wattage+1263.6)/30;
 
 end
 %--------------------------------------------------------------
-%fprintf(fileID,'%.2f\n',total_wattage);
-
-
-%printing on the files
-%fprintf(fileID,'%%ID H# HT PT TotW B \n');
-%fprintf(fileID,'0 %d %d %.2f %.2f %.2f\n', identifier, Household_size, threshold, total_wattage, budget);
-
-%fprintf(fileID, '%%APPno TW D FR TO PR\n');
-
-%for x=1:size(apps,1)
-%    for y=1:6
-%        if y ~=6 && y ~=2
-%            fprintf(fileID, '%d ',apps(x,y));
-%        elseif y == 2
-%            fprintf(fileID, '%.2f ',apps(x,y));
-%        else
-%            fprintf(fileID, '%d\n',apps(x,y));
-%        end
-%    end
-%end
-
-%fprintf(fileID,'%%ESS and Charge: \n');
-%fprintf(fileID,'98 %d %d 0 0 0\n',ESS_possess,ESS_charge);
-%fprintf(fileID,'%%EV and Charge: \n');
-%fprintf(fileID,'99 %d %d 0 0 0\n',EV_possess, EV_charge);
-%fprintf(fileID,'%%Solar Panels: \n');
-%fprintf(fileID,'100 %d 0 0 0 0\n\n',SP_num);
-
-
 %printing on the files in matrix form
 fprintf(fileID,'H%d = [0 %d %d %.2f %.2f %.2f\n',identifier, identifier, Household_size, threshold, total_wattage, budget);
 for x=1:size(apps,1)
@@ -191,9 +141,6 @@ fprintf(fileID,'100 %d 0 0 0 0];\n\n',SP_num);
 
 end
 
-%plotting continued
-%once multiple files are needed I will need to save the plot variable
-%elsewhere then rerun the code then re-add
 figure(output_file_name);
 plot;
 consumption_matrix(output_file_name,:) = plot;
