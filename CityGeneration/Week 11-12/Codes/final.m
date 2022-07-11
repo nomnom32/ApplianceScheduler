@@ -40,13 +40,11 @@ else
     num_iterations = size(col,2)-5;
     randomizer = randperm(size(col,2));
     removedOA = randomizer(1:num_iterations);
-    %MCA_AO_template
 
     for x = 1:size(removedOA,2)
         MCA_AO_template(1,col(1,removedOA(1,x))) = 0; %this is the index of one of the OA to be removed in MCA_AO_template
     end
 
-    %MCA_AO_template
     MCA_AO = [MCA_AO, MCA_AO_template];
 end
     
@@ -60,11 +58,11 @@ pr;
 col6_template = zeros(size(pr));
 
 %row sorting
-[B,index] = sortrows(transpose(pr)); %you can call index as is rin
+[B,index] = sortrows(transpose(pr));
 num_zero = sum(~pr(:)); %number of zeros
 size(pr,2); %number of entries in pr
 
-%for loop that prints the answer
+%for loop for printing
 for x = (num_zero+1):size(col6_template,2)
     col6_template(1,index(x,1)) = x-num_zero; %print 1->x while considering the number of zeros in the matrix
 end
