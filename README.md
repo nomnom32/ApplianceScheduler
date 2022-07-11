@@ -1,4 +1,4 @@
-# ApplianceScheduler
+# Appliance Scheduler
 BPSO-based appliance scheduler
 
 %% SCHEDULER
@@ -28,8 +28,16 @@ probability_data.m:
 
 Converter.m:
 - converter for probability data into input for the BPSO main code
-- still working on finalizing TW matrix, budget formula, splicing of time slots based on cut-off time
 
 final.m:
-- function found in Converter.m that generates the Appliance matrix which contain the relevant factors such as
+- function found in Converter.m that generates the Appliance matrix of every household which contain the relevant factors such as
 - Appliance Ownership, Usage, Duration, Start time, End time, Appliance Priority
+
+CitywithEV.m
+- generates the total energy demand of the user input across 24 hours while considering electric vehicle usage
+
+CitywithEVPVESS.m
+- generates the total energy demand of the user input across 24 hours while considering electric vehicle usage, solar power, and energy storage system usage.
+
+%% USER INPUTS
+- contains the raw appliance matrices of the household from Household 1-14061 separated into 20 files
