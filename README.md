@@ -1,6 +1,4 @@
-# Appliance Scheduler
-BPSO-based appliance scheduler
-
+# BPSO-based Appliance Scheduler
 %% SCHEDULER
 
 MainCode_Test2.m runs the import of data input (UserInput_Test2.m) with modified main code and objective function (objFunc.m) to accomodate EVCode Function (EVCode.m) and BatteryCodeFunction (BatteryCode.m)
